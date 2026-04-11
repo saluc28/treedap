@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary SEO -->
+    <title>Learn LDAP &amp; Active Directory | TreeDap — Free Interactive IAM Course</title>
+    <meta name="description" content="The fastest way to learn LDAP and Active Directory. 21 hands-on levels: write real LDAP filters, explore a live directory tree, and master Identity &amp; Access Management from scratch. Free LDAP course, no signup required." />
+    <meta name="keywords" content="learn LDAP, LDAP course, LDAP tutorial, learn Active Directory, how to learn Active Directory, Active Directory course, Active Directory training, IAM course, identity and access management course, learn IAM, IAM training, LDAP filter tutorial, LDAP query examples, directory services course, OpenLDAP tutorial, free LDAP training, LDAP for beginners, enterprise directory services, IT security course, sysadmin training" />
+    <link rel="canonical" href="https://treedap.com/" />
+
+    <!-- Open Graph (LinkedIn, Facebook, Slack previews) -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://treedap.com/" />
+    <meta property="og:title"       content="Learn LDAP &amp; Active Directory Free — TreeDap IAM Course" />
+    <meta property="og:description" content="Free LDAP course with 21 hands-on levels. Learn LDAP filters, Active Directory structure, and Identity &amp; Access Management. Browser-based, no signup." />
+    <meta property="og:site_name"   content="TreeDap" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card"        content="summary" />
+    <meta name="twitter:title"       content="Learn LDAP &amp; Active Directory — TreeDap" />
+    <meta name="twitter:description" content="21 interactive levels to master LDAP filters, Active Directory, and IAM. Free, browser-based, no signup." />
+
+    <!-- JSON-LD: Course structured data (Google rich results) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Learn LDAP, Active Directory & IAM — TreeDap",
+      "description": "A free, interactive course to master LDAP queries, Active Directory, and Identity & Access Management. 21 hands-on levels with a live directory tree and real filter engine.",
+      "provider": {
+        "@type": "Organization",
+        "name": "TreeDap",
+        "url": "https://treedap.com"
+      },
+      "educationalLevel": "Beginner to Advanced",
+      "isAccessibleForFree": true,
+      "inLanguage": "en",
+      "teaches": [
+        "LDAP filters and queries",
+        "Active Directory directory structure",
+        "Identity and Access Management (IAM)",
+        "Directory Services",
+        "RFC 4515 LDAP filter syntax"
+      ],
+      "hasCourseInstance": {
+        "@type": "CourseInstance",
+        "courseMode": "online",
+        "courseWorkload": "PT2H"
+      }
+    }
+    </script>
+
+    <!--
+      Critical CSS — inlined so the landing page paints immediately,
+      before any JS or external CSS file arrives.
+      Only above-the-fold landing styles are here; the rest loads async.
+    -->
+    <style>
+      :root {
+        --bg-dark:        #0d1117;
+        --bg-panel:       #161b22;
+        --bg-card:        #21262d;
+        --border:         #30363d;
+        --text-primary:   #e6edf3;
+        --text-secondary: #8b949e;
+        --accent:         #4f8ef7;
+        --accent-btn:     #2563eb;
+        --success:        #3fb950;
+        --radius-sm:      6px;
+        --radius-md:      10px;
+        --transition:     0.18s ease;
+      }
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      #root { min-height: 100vh; display: flex; flex-direction: column; }
+
+      .screen { min-height: 100vh; display: flex; flex-direction: column; }
+
+      /* Landing layout */
+      #screen-landing {
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      .landing-bg {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79,142,247,0.12), transparent),
+          radial-gradient(ellipse 60% 40% at 80% 80%,  rgba(63,185,80,0.06),  transparent);
+        pointer-events: none;
+      }
+      .landing-grid {
+        position: absolute; inset: 0;
+        background-image:
+          linear-gradient(rgba(48,54,61,0.3) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(48,54,61,0.3) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+      }
+      .landing-content { position: relative; text-align: center; max-width: 680px; width: 100%; }
+
+      /* Logo */
+      .landing-logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+      .landing-logo-icon {
+        width: 52px; height: 52px;
+        background: linear-gradient(135deg, var(--accent), #7b6ef6);
+        border-radius: var(--radius-md);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 26px;
+        box-shadow: 0 0 32px rgba(79,142,247,0.3);
+      }
+      .landing-logo-text { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+      .text-accent  { color: var(--accent); }
+
+      /* Tagline + title */
+      .landing-tagline {
+        font-size: 13px; font-weight: 500; color: var(--accent);
+        text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 16px;
+      }
+      .landing-title {
+        font-size: clamp(36px, 6vw, 64px);
+        font-weight: 700; line-height: 1.1; letter-spacing: -2px; margin-bottom: 20px;
+        background: linear-gradient(135deg, var(--text-primary) 50%, var(--text-secondary));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      }
+
+      /* Description + CTA */
+      .landing-description {
+        font-size: 17px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 36px;
+      }
+      .landing-description strong { color: var(--text-primary); }
+      .landing-cta-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+
+      /* Buttons — only primary needed above the fold */
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 20px; border-radius: var(--radius-sm); border: none;
+        cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500;
+        text-decoration: none; white-space: nowrap;
+        transition: all var(--transition);
+      }
+      .btn-primary { background: var(--accent-btn); color: #fff; }
+      .btn-primary:hover { background: #1a57d4; transform: translateY(-1px); }
+      .btn-lg { padding: 14px 28px; font-size: 16px; }
+
+      /* Meta stats */
+      .landing-meta {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; color: var(--text-secondary); font-size: 13px; margin-bottom: 56px;
+      }
+      .landing-meta-sep { opacity: 0.35; }
+
+      /* Feature cards skeleton */
+      .landing-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: left; align-items: start; width: min(960px, 100%); }
+      .feature-card {
+        background: var(--bg-panel); border: 1px solid var(--border);
+        border-radius: var(--radius-md); padding: 20px;
+      }
+      .feature-icon { font-size: 24px; margin-bottom: 10px; }
+      .feature-title { font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+      .feature-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+      @media (max-width: 640px) {
+        #screen-landing { padding: 28px 16px; }
+        .landing-logo { margin-bottom: 22px; }
+        .landing-logo-icon { width: 42px; height: 42px; font-size: 22px; }
+        .landing-logo-text { font-size: 22px; }
+        .landing-title { margin-bottom: 16px; }
+        .landing-description { font-size: 15px; margin-bottom: 28px; }
+        .landing-cta-group { margin-bottom: 12px; }
+        .btn-lg { padding: 12px 24px; font-size: 15px; }
+        .landing-meta { flex-wrap: wrap; gap: 6px; margin-bottom: 40px; }
+        .landing-features { grid-template-columns: 1fr; gap: 10px; }
+        .feature-card { padding: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Static landing-page shell.
+      Visible immediately — before any JS downloads.
+      React mounts over this once the bundle arrives; appearance is identical.
+      The CTA button is intentionally disabled until JS is ready.
+    -->
+    <div id="root">
+      <div id="screen-landing" class="screen active">
+        <div class="landing-bg"></div>
+        <div class="landing-grid"></div>
+        <main class="landing-content">
+          <div class="landing-logo">
+            <div class="landing-logo-icon">🌳</div>
+            <span class="landing-logo-text">Tree<span class="text-accent">Dap</span></span>
+          </div>
+          <p class="landing-tagline">Free Interactive IAM Course</p>
+          <h1 class="landing-title">Learn LDAP<br>the Tree Way.</h1>
+          <p class="landing-description">
+            LDAP is the backbone of enterprise identity. It powers <strong>Active Directory</strong>,
+            OpenLDAP, FreeIPA, and every serious IAM platform. If you work in IT, security, or
+            cloud infrastructure, <strong>understanding it is not optional</strong>.
+          </p>
+          <div class="landing-cta-group">
+            <button class="btn btn-primary btn-lg" disabled style="opacity:0.7;cursor:wait">
+              Start Learning →
+            </button>
+          </div>
+          <div class="landing-meta">
+            <span>21 levels</span>
+            <span class="landing-meta-sep">·</span>
+            <span>RFC 4515 parser</span>
+            <span class="landing-meta-sep">·</span>
+            <span>No signup needed</span>
+          </div>
+          <div class="landing-features" id="features">
+            <div class="feature-card">
+              <div class="feature-icon">🌳</div>
+              <div class="feature-title">Live Directory Tree</div>
+              <div class="feature-desc">Explore a realistic LDAP tree with users, groups, and computers. Click entries to inspect attributes, watch queries highlight live, and hit the <strong>🌳 button</strong> for a visual branching tree view.</div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">⚡</div>
+              <div class="feature-title">Real Query Engine</div>
+              <div class="feature-desc">A full RFC 4515 filter parser runs entirely in your browser. AND, OR, NOT, wildcards, comparisons and presence filters all work exactly as on a real LDAP server.</div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🎯</div>
+              <div class="feature-title">21 Guided Levels</div>
+              <div class="feature-desc">From reading your first tree entry to writing complex nested queries. Progressive hints, instant feedback, star ratings, and a final boss challenge to test everything you have learned.</div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
