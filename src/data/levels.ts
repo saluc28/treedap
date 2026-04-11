@@ -219,7 +219,8 @@ export const LEVELS: Level[] = [
     scope: "sub",
     expectedDNs: [
       "cn=admins,ou=Groups,dc=treedap,dc=com",
-      "cn=engineering,ou=Groups,dc=treedap,dc=com"
+      "cn=engineering,ou=Groups,dc=treedap,dc=com",
+      "cn=vpn-users,ou=Groups,dc=treedap,dc=com"
     ],
     hints: [
       "You're searching the Groups OU for entries whose <code>member</code> attribute contains Alice's DN. The search goes from the group toward the member, not the other way around.",
