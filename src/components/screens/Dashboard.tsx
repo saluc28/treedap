@@ -11,6 +11,12 @@ interface DashboardProps {
   getStars: (id: number) => number;
 }
 
+const OU_GROUPS = [
+  { key: 'beginner',     ou: 'ou=beginner',     label: 'Foundations' },
+  { key: 'intermediate', ou: 'ou=intermediate',  label: 'Query Writing' },
+  { key: 'advanced',     ou: 'ou=advanced',      label: 'Real Scenarios' },
+] as const;
+
 export function Dashboard({
   onSelectLevel,
   onBack,
@@ -23,9 +29,11 @@ export function Dashboard({
   const pct = Math.round((completedCount / LEVELS.length) * 100);
 
   return (
-    <div id="screen-dashboard" className="screen active" style={{ flexDirection: 'column' }}>
+    <div id="screen-dashboard" className="screen active">
 
-      {/* Mobile wall - visible only on small viewports via CSS, zero SEO impact */}
+      <div className="db-grid-dots" />
+
+      {/* Mobile wall */}
       <div className="mobile-wall">
         <div className="mobile-wall-icon">🖥️</div>
         <div className="mobile-wall-title">Best experienced on desktop</div>
@@ -35,81 +43,108 @@ export function Dashboard({
         <div className="mobile-wall-hint">Open this page on a laptop or desktop to start the course.</div>
       </div>
 
-      <header className="dashboard-header">
-        <a
-          className="header-logo"
-          onClick={onBack}
-          style={{ cursor: 'pointer', textDecoration: 'none', color: 'var(--text-primary)' }}
-        >
-          <div className="header-logo-icon">🌳</div>
-          TreeDap
-        </a>
-        <div className="dashboard-stats">
-          <div className="stat-item">
-            <span className="stat-value">{totalStars}</span>
-            <span className="stat-label">⭐ stars</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-value">{completedCount}</span>
-            <span className="stat-label">/ {LEVELS.length} levels</span>
+      {/* Header */}
+      <header className="db-header">
+        <div className="db-header-inner">
+          <a className="db-logo" onClick={onBack}>
+            <span className="db-logo-icon">🌳</span>
+            <span className="db-logo-text">Tree<span className="db-logo-accent">Dap</span></span>
+          </a>
+          <div className="db-header-stats">
+            <span className="db-header-stat">
+              <strong>{totalStars}</strong> ⭐ stars
+            </span>
+            <span className="db-header-stat-sep" />
+            <span className="db-header-stat">
+              <strong>{completedCount}</strong> / {LEVELS.length} levels
+            </span>
           </div>
         </div>
       </header>
 
-      <main className="dashboard-body">
-        <h2 className="dashboard-section-title">Your Progress</h2>
-        <p className="dashboard-section-subtitle">
-          Complete levels to unlock new challenges. Each level teaches a new LDAP concept.
-        </p>
+      <main className="db-main">
 
-        <div className="progress-bar-container">
-          <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
+        {/* Directory context bar */}
+        <div className="db-context">
+          <div className="db-context-top">
+            <div className="db-breadcrumb">
+              <span className="db-breadcrumb-icon">📂</span>
+              <span className="db-breadcrumb-item">dc=treedap,dc=com</span>
+              <span className="db-breadcrumb-sep">›</span>
+              <span className="db-breadcrumb-item">ou=course</span>
+            </div>
+            <div className="db-context-meta">
+              <code className="db-context-filter">(objectClass=courseLevel)</code>
+              <span className="db-context-pill">{LEVELS.length} entries</span>
+              <span className="db-context-pill db-pill-blue">{completedCount} completed</span>
+              <span className="db-context-pill db-pill-gold">{totalStars} ⭐ stars</span>
+            </div>
+          </div>
+          <div className="db-progress-track">
+            <div className="db-progress-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="db-progress-label">{pct}% complete</div>
         </div>
 
-        <div className="progress-dots">
-          {LEVELS.map(l => {
-            let cls = 'progress-dot';
-            if (isCompleted(l.id)) cls += ' completed';
-            else if (isUnlocked(l.id)) cls += ' current';
-            return <div key={l.id} className={cls} />;
-          })}
-        </div>
+        {/* Level groups */}
+        {OU_GROUPS.map(group => {
+          const groupLevels = LEVELS.filter(l => l.difficulty === group.key);
+          if (!groupLevels.length) return null;
 
-        <div className="levels-grid">
-          {LEVELS.map(l => {
-            const unlocked = isUnlocked(l.id);
-            const completed = isCompleted(l.id);
-            const stars = getStars(l.id);
+          const groupCompleted = groupLevels.filter(l => isCompleted(l.id)).length;
 
-            let cardCls = 'level-card';
-            if (completed) cardCls += ' completed';
-            if (!unlocked) cardCls += ' locked';
-
-            return (
-              <div
-                key={l.id}
-                className={cardCls}
-                onClick={() => unlocked && onSelectLevel(l.id)}
-              >
-                <div className="level-card-header">
-                  <span className="level-number">Level {l.id}</span>
-                  <span className="level-status-icon">
-                    {completed ? '✅' : unlocked ? '🔓' : '🔒'}
-                  </span>
-                </div>
-                <div className="level-title">{l.title}</div>
-                <div className="level-card-footer">
-                  <Badge difficulty={l.difficulty} />
-                  <div className="stars-display">
-                    <span className={`star${stars >= 1 ? ' earned' : ''}`}>⭐</span>
-                    <span className={`star${stars >= 2 ? ' earned' : ''}`}>⭐</span>
-                    <span className={`star${stars >= 3 ? ' earned' : ''}`}>⭐</span>
-                  </div>
-                </div>
+          return (
+            <div key={group.key} className="db-group">
+              <div className="db-group-header">
+                <span className="db-group-icon">📁</span>
+                <span className="db-group-ou">{group.ou}</span>
+                <span className="db-group-label">{group.label}</span>
+                <span className="db-group-count">{groupCompleted}/{groupLevels.length}</span>
               </div>
-            );
-          })}
-        </div>
+
+              <div className="db-levels-grid">
+                {groupLevels.map(l => {
+                  const unlocked = isUnlocked(l.id);
+                  const completed = isCompleted(l.id);
+                  const stars = getStars(l.id);
+                  const status = completed ? 'COMPLETE' : unlocked ? 'AVAILABLE' : 'LOCKED';
+
+                  let cardCls = 'db-level-card';
+                  if (completed) cardCls += ' db-card-completed';
+                  else if (unlocked) cardCls += ' db-card-unlocked';
+                  else cardCls += ' db-card-locked';
+
+                  return (
+                    <div
+                      key={l.id}
+                      className={cardCls}
+                      onClick={() => unlocked && onSelectLevel(l.id)}
+                    >
+                      <div className="db-card-dn">
+                        cn=level-{String(l.id).padStart(2, '0')},{group.ou}
+                      </div>
+                      <div className="db-card-title">{l.title}</div>
+                      <div className="db-card-footer">
+                        <Badge difficulty={l.difficulty} />
+                        <div className="db-card-right">
+                          <div className="db-stars">
+                            {[1, 2, 3].map(n => (
+                              <span key={n} className={`db-star${stars >= n ? ' earned' : ''}`}>⭐</span>
+                            ))}
+                          </div>
+                          <span className={`db-status-chip db-chip-${status.toLowerCase()}`}>
+                            {status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
       </main>
     </div>
   );

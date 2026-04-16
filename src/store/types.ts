@@ -29,6 +29,7 @@ export type Action =
   | { type: 'SET_QUERY'; payload: string }
   | { type: 'SET_RESULTS'; payload: { results: LdapEntry[]; allResults: LdapEntry[]; validation: ValidationResult } }
   | { type: 'SET_QUERY_RESULTS'; payload: { results: LdapEntry[]; allResults: LdapEntry[] } }
+  | { type: 'SET_VALIDATION'; payload: ValidationResult }
   | { type: 'SET_PARSE_ERROR'; payload: string }
   | { type: 'INCREMENT_ATTEMPTS' }
   | { type: 'USE_HINT' }

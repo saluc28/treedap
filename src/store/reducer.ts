@@ -67,6 +67,7 @@ export function reducer(state: AppState, action: Action): AppState {
         ...state,
         queryResults: action.payload.results,
         allQueryResults: action.payload.allResults,
+        validationResult: null,
         parseError: null,
       };
 
@@ -140,6 +141,9 @@ export function reducer(state: AppState, action: Action): AppState {
         answerInput: '',
         answerResult: null,
       };
+
+    case 'SET_VALIDATION':
+      return { ...state, validationResult: action.payload };
 
     case 'SET_ANSWER_INPUT':
       return { ...state, answerInput: action.payload };

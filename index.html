@@ -6,11 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary SEO -->
-    <title>TreeDap — Interactive LDAP Course</title>
+    <title>TreeDap - Interactive LDAP Course</title>
     <meta name="description" content="The fastest way to learn LDAP and Active Directory. 15 hands-on levels: write real LDAP filters, explore a live directory tree, and master Identity &amp; Access Management from scratch. Free LDAP course, no signup required." />
     <meta name="keywords" content="learn LDAP, LDAP course, LDAP tutorial, learn Active Directory, how to learn Active Directory, Active Directory course, Active Directory training, IAM course, identity and access management course, learn IAM, IAM training, LDAP filter tutorial, LDAP query examples, directory services course, OpenLDAP tutorial, free LDAP training, LDAP for beginners, enterprise directory services, IT security course, sysadmin training" />
     <link rel="canonical" href="https://treedap.com/" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <!-- Inter for landing + app UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <!-- Open Graph (LinkedIn, Facebook, Slack previews) -->
     <meta property="og:type"        content="website" />
@@ -57,138 +62,137 @@
     <!--
       Critical CSS — inlined so the landing page paints immediately,
       before any JS or external CSS file arrives.
-      Only above-the-fold landing styles are here; the rest loads async.
     -->
     <style>
-      :root {
-        --bg-dark:        #0d1117;
-        --bg-panel:       #161b22;
-        --bg-card:        #21262d;
-        --border:         #30363d;
-        --text-primary:   #e6edf3;
-        --text-secondary: #8b949e;
-        --accent:         #4f8ef7;
-        --accent-btn:     #2563eb;
-        --success:        #3fb950;
-        --radius-sm:      6px;
-        --radius-md:      10px;
-        --transition:     0.18s ease;
-      }
-
+      html.hide-shell #root { visibility: hidden; }
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; }
       body {
-        background: var(--bg-dark);
-        color: var(--text-primary);
-        font-family: system-ui, -apple-system, sans-serif;
+        background: #f8f9fc;
+        color: #191c1e;
+        font-family: 'Inter', system-ui, sans-serif;
         font-size: 15px;
         line-height: 1.6;
         min-height: 100vh;
         overflow-x: hidden;
       }
-
       #root { min-height: 100vh; display: flex; flex-direction: column; }
-
       .screen { min-height: 100vh; display: flex; flex-direction: column; }
 
-      /* Landing layout */
-      #screen-landing {
-        align-items: center;
-        justify-content: center;
-        padding: 40px 20px;
-        position: relative;
-        overflow: hidden;
-      }
-      .landing-bg {
-        position: absolute; inset: 0;
-        background:
-          radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79,142,247,0.12), transparent),
-          radial-gradient(ellipse 60% 40% at 80% 80%,  rgba(63,185,80,0.06),  transparent);
-        pointer-events: none;
-      }
-      .landing-grid {
-        position: absolute; inset: 0;
-        background-image:
-          linear-gradient(rgba(48,54,61,0.3) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(48,54,61,0.3) 1px, transparent 1px);
-        background-size: 40px 40px;
-        pointer-events: none;
-      }
-      .landing-content { position: relative; text-align: center; max-width: 680px; width: 100%; }
+      /* Landing shell */
+      #screen-landing { align-items: stretch; justify-content: flex-start; background: #f8f9fc; overflow-y: auto; overflow-x: hidden; }
 
-      /* Logo */
-      .landing-logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 32px; }
-      .landing-logo-icon {
-        width: 52px; height: 52px;
-        background: linear-gradient(135deg, var(--accent), #7b6ef6);
-        border-radius: var(--radius-md);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 26px;
-        box-shadow: 0 0 32px rgba(79,142,247,0.3);
+      /* Backgrounds */
+      .landing-grid-dots {
+        position: fixed; inset: 0;
+        background-image: radial-gradient(circle, #c1c7d2 1px, transparent 1px);
+        background-size: 24px 24px; opacity: 0.25; pointer-events: none; z-index: 0;
       }
-      .landing-logo-text { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-      .text-accent  { color: var(--accent); }
-
-      /* Tagline + title */
-      .landing-tagline {
-        font-size: 13px; font-weight: 500; color: var(--accent);
-        text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 16px;
-      }
-      .landing-title {
-        font-size: clamp(36px, 6vw, 64px);
-        font-weight: 700; line-height: 1.1; letter-spacing: -2px; margin-bottom: 20px;
-        background: linear-gradient(135deg, var(--text-primary) 50%, var(--text-secondary));
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      .landing-scanlines {
+        position: fixed; inset: 0;
+        background: linear-gradient(to bottom, rgba(18,16,16,0) 50%, rgba(0,0,0,0.018) 50%);
+        background-size: 100% 4px; pointer-events: none; z-index: 0;
       }
 
-      /* Description + CTA */
-      .landing-description {
-        font-size: 17px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 36px;
+      /* Sticky header */
+      .landing-header {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(248,249,252,0.92); backdrop-filter: blur(10px);
+        border-bottom: 1px solid #c1c7d2;
       }
-      .landing-description strong { color: var(--text-primary); }
-      .landing-cta-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+      .landing-header-inner {
+        max-width: 1200px; margin: 0 auto; padding: 12px 32px;
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      .landing-logo { display: flex; align-items: center; gap: 10px; }
+      .landing-logo-icon { font-size: 22px; line-height: 1; }
+      .landing-logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: #004277; }
+      .landing-logo-accent { color: #4b607c; }
 
-      /* Buttons — only primary needed above the fold */
+      /* Buttons */
       .btn {
         display: inline-flex; align-items: center; gap: 8px;
-        padding: 10px 20px; border-radius: var(--radius-sm); border: none;
-        cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500;
-        text-decoration: none; white-space: nowrap;
-        transition: all var(--transition);
+        padding: 10px 20px; border-radius: 8px; border: none;
+        cursor: pointer; font-family: 'Inter', system-ui; font-size: 14px; font-weight: 600;
+        text-decoration: none; white-space: nowrap; transition: background 0.15s, box-shadow 0.15s;
       }
-      .btn-primary { background: var(--accent-btn); color: #fff; }
-      .btn-primary:hover { background: #1a57d4; transform: translateY(-1px); }
-      .btn-lg { padding: 14px 28px; font-size: 16px; }
+      .btn-primary { background: #004277; color: #fff; box-shadow: 0 4px 16px rgba(0,66,119,0.25); }
+      .btn-primary:hover { background: #005a9e; }
+      .btn-lg { padding: 14px 28px; font-size: 15px; font-weight: 700; }
 
-      /* Meta stats */
-      .landing-meta {
-        display: flex; align-items: center; justify-content: center;
-        gap: 10px; color: var(--text-secondary); font-size: 13px; margin-bottom: 56px;
+      /* Hero */
+      .landing-hero { position: relative; z-index: 1; padding: 80px 32px 100px; }
+      .landing-hero-inner {
+        max-width: 1200px; margin: 0 auto;
+        display: flex; align-items: center; gap: 64px;
       }
-      .landing-meta-sep { opacity: 0.35; }
+      .landing-hero-text { flex: 1; display: flex; flex-direction: column; gap: 28px; min-width: 0; }
 
-      /* Feature cards skeleton */
-      .landing-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: left; align-items: start; width: min(960px, 100%); }
-      .feature-card {
-        background: var(--bg-panel); border: 1px solid var(--border);
-        border-radius: var(--radius-md); padding: 20px;
+      .landing-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #e7e8eb; padding: 5px 12px; border-radius: 2px;
+        width: fit-content; font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.1em; color: #414750;
       }
-      .feature-icon { font-size: 24px; margin-bottom: 10px; }
-      .feature-title { font-weight: 600; margin-bottom: 6px; font-size: 14px; }
-      .feature-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+      .landing-badge-dot { width: 8px; height: 8px; background: #004277; border-radius: 50%; flex-shrink: 0; }
 
+      .landing-title {
+        font-size: clamp(38px, 5.5vw, 68px); font-weight: 800; line-height: 1.05;
+        letter-spacing: -2px; color: #191c1e; background: none;
+        -webkit-text-fill-color: #191c1e; text-shadow: none; margin-bottom: 0;
+      }
+      .landing-title em { color: #004277; font-style: italic; }
+      .landing-description { font-size: 17px; color: #414750; line-height: 1.7; margin-bottom: 0; }
+      .landing-description strong { color: #191c1e; font-weight: 600; }
+
+      .landing-cta-row { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+      .landing-stats { display: flex; gap: 24px; padding-left: 32px; border-left: 1px solid rgba(193,199,210,0.6); }
+      .landing-stat { text-align: center; }
+      .landing-stat-num { display: block; font-size: 20px; font-weight: 700; color: #004277; }
+      .landing-stat-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #414750; }
+
+      /* Code panel */
+      .landing-code-panel {
+        flex: 1; min-width: 0; background: #fff;
+        border-radius: 8px; border: 1px solid rgba(193,199,210,0.25);
+        box-shadow: 0 24px 64px rgba(0,0,0,0.1); overflow: hidden;
+      }
+      .landing-code-titlebar {
+        background: #f2f3f6; padding: 10px 16px;
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid rgba(193,199,210,0.2);
+      }
+      .landing-code-dots { display: flex; gap: 6px; }
+      .landing-code-dots span { width: 12px; height: 12px; border-radius: 50%; }
+      .lcd-red    { background: rgba(186,26,26,0.18); border: 1px solid rgba(186,26,26,0.35); }
+      .lcd-yellow { background: rgba(107,48,0,0.18);  border: 1px solid rgba(107,48,0,0.35); }
+      .lcd-blue   { background: rgba(0,66,119,0.18);  border: 1px solid rgba(0,66,119,0.35); }
+      .landing-code-label { font-family: monospace; font-size: 10px; color: #727782; letter-spacing: 0.08em; }
+      .landing-code-body {
+        background: #001c38; padding: 24px;
+        display: flex; flex-direction: column; gap: 3px; min-height: 300px;
+      }
+      .lc-line { display: flex; align-items: baseline; gap: 14px; line-height: 1.7; font-family: monospace; font-size: 13px; }
+      .lc-line.lc-highlighted { background: rgba(0,66,119,0.35); border-left: 2px solid #a2c9ff; margin: 2px -24px; padding: 1px 24px; }
+      .lc-num { color: #414750; width: 24px; text-align: right; flex-shrink: 0; font-size: 11px; }
+      .lc-blue { color: #7eb8ff; } .lc-white { color: #fff; } .lc-muted { color: rgba(162,201,255,0.45); }
+      .lc-i1 { padding-left: 16px; } .lc-i2 { padding-left: 32px; } .lc-i3 { padding-left: 48px; }
+      .lc-terminal {
+        margin-top: 20px; background: rgba(0,0,0,0.3); padding: 8px 12px;
+        border: 1px solid rgba(0,66,119,0.3); font-family: monospace; font-size: 12px;
+        color: #7eb8ff; display: flex; gap: 8px; align-items: center;
+      }
+      .lc-prompt { color: #a2c9ff; font-weight: 600; }
+
+      @media (max-width: 900px) {
+        .landing-hero-inner { flex-direction: column; gap: 40px; }
+        .landing-code-panel { width: 100%; }
+      }
       @media (max-width: 640px) {
-        #screen-landing { padding: 28px 16px; }
-        .landing-logo { margin-bottom: 22px; }
-        .landing-logo-icon { width: 42px; height: 42px; font-size: 22px; }
-        .landing-logo-text { font-size: 22px; }
-        .landing-title { margin-bottom: 16px; }
-        .landing-description { font-size: 15px; margin-bottom: 28px; }
-        .landing-cta-group { margin-bottom: 12px; }
-        .btn-lg { padding: 12px 24px; font-size: 15px; }
-        .landing-meta { flex-wrap: wrap; gap: 6px; margin-bottom: 40px; }
-        .landing-features { grid-template-columns: 1fr; gap: 10px; }
-        .feature-card { padding: 16px; }
+        .landing-header-inner { padding: 10px 16px; }
+        .landing-hero { padding: 48px 16px 64px; }
+        .landing-cta-row { gap: 20px; }
+        .landing-stats { padding-left: 20px; gap: 16px; }
       }
     </style>
   </head>
@@ -198,53 +202,92 @@
       Visible immediately — before any JS downloads.
       React mounts over this once the bundle arrives; appearance is identical.
       The CTA button is intentionally disabled until JS is ready.
+      The inline script hides the shell synchronously if the user should land
+      on dashboard/level (sessionStorage), preventing a flash of the wrong screen.
     -->
+    <script>
+      try {
+        var nav = sessionStorage.getItem('treedap_nav');
+        if (nav) {
+          var s = JSON.parse(nav).screen;
+          if (s === 'dashboard' || s === 'level') {
+            document.documentElement.classList.add('hide-shell');
+          }
+        }
+      } catch(e) {}
+    </script>
     <div id="root">
       <div id="screen-landing" class="screen active">
-        <div class="landing-bg"></div>
-        <div class="landing-grid"></div>
-        <main class="landing-content">
-          <div class="landing-logo">
-            <div class="landing-logo-icon">🌳</div>
-            <span class="landing-logo-text">Tree<span class="text-accent">Dap</span></span>
-          </div>
-          <p class="landing-tagline">Free Interactive IAM Course</p>
-          <h1 class="landing-title">Learn LDAP<br>the Tree Way.</h1>
-          <p class="landing-description">
-            LDAP is the backbone of enterprise identity. It powers <strong>Active Directory</strong>,
-            OpenLDAP, FreeIPA, and every serious IAM platform. If you work in IT, security, or
-            cloud infrastructure, <strong>understanding it is not optional</strong>.
-          </p>
-          <div class="landing-cta-group">
-            <button class="btn btn-primary btn-lg" disabled style="opacity:0.7;cursor:wait">
-              Start Learning →
-            </button>
-          </div>
-          <div class="landing-meta">
-            <span>21 levels</span>
-            <span class="landing-meta-sep">·</span>
-            <span>RFC 4515 parser</span>
-            <span class="landing-meta-sep">·</span>
-            <span>No signup needed</span>
-          </div>
-          <div class="landing-features" id="features">
-            <div class="feature-card">
-              <div class="feature-icon">🌳</div>
-              <div class="feature-title">Live Directory Tree</div>
-              <div class="feature-desc">Explore a realistic LDAP tree with users, groups, and computers. Click entries to inspect attributes, watch queries highlight live, and hit the <strong>🌳 button</strong> for a visual branching tree view.</div>
+        <div class="landing-grid-dots"></div>
+        <div class="landing-scanlines"></div>
+
+        <header class="landing-header">
+          <div class="landing-header-inner">
+            <div class="landing-logo">
+              <span class="landing-logo-icon">🌳</span>
+              <span class="landing-logo-text">Tree<span class="landing-logo-accent">Dap</span></span>
             </div>
-            <div class="feature-card">
-              <div class="feature-icon">⚡</div>
-              <div class="feature-title">Real Query Engine</div>
-              <div class="feature-desc">A full RFC 4515 filter parser runs entirely in your browser. AND, OR, NOT, wildcards, comparisons and presence filters all work exactly as on a real LDAP server.</div>
+            <button class="btn btn-primary" disabled style="opacity:0.7;cursor:wait">Start Learning</button>
+          </div>
+        </header>
+
+        <section class="landing-hero">
+          <div class="landing-hero-inner">
+            <div class="landing-hero-text">
+              <div class="landing-badge">
+                <span class="landing-badge-dot"></span>
+                <span>Free Interactive IAM Course</span>
+              </div>
+              <h1 class="landing-title">LDAP doesn't tell you<br>when you're <em>wrong.</em></h1>
+              <p class="landing-description">
+                LDAP is the backbone of enterprise identity. It powers <strong>Active Directory</strong>,
+                OpenLDAP, FreeIPA, and every serious IAM platform. If you work in IT, security, or
+                cloud infrastructure, <strong>understanding it is not optional</strong>.
+              </p>
+              <div class="landing-cta-row">
+                <button class="btn btn-primary btn-lg" disabled style="opacity:0.7;cursor:wait">Start Learning →</button>
+                <div class="landing-stats">
+                  <div class="landing-stat">
+                    <span class="landing-stat-num">15</span>
+                    <span class="landing-stat-label">Levels</span>
+                  </div>
+                  <div class="landing-stat">
+                    <span class="landing-stat-num">Live</span>
+                    <span class="landing-stat-label">Scenarios</span>
+                  </div>
+                  <div class="landing-stat">
+                    <span class="landing-stat-num">0</span>
+                    <span class="landing-stat-label">Signup</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="feature-card">
-              <div class="feature-icon">🎯</div>
-              <div class="feature-title">21 Guided Levels</div>
-              <div class="feature-desc">From reading your first tree entry to writing complex nested queries. Progressive hints, instant feedback, star ratings, and a final boss challenge to test everything you have learned.</div>
+
+            <div class="landing-code-panel">
+              <div class="landing-code-titlebar">
+                <div class="landing-code-dots">
+                  <span class="lcd-red"></span>
+                  <span class="lcd-yellow"></span>
+                  <span class="lcd-blue"></span>
+                </div>
+                <span class="landing-code-label">DIRECTORY_NAVIGATOR_V1.0</span>
+              </div>
+              <div class="landing-code-body">
+                <div class="lc-line"><span class="lc-num">01</span><span class="lc-blue">dn: dc=treedap,dc=com</span></div>
+                <div class="lc-line"><span class="lc-num">02</span><span class="lc-blue lc-i1">ou=people,dc=treedap,dc=com</span></div>
+                <div class="lc-line lc-highlighted"><span class="lc-num">03</span><span class="lc-white lc-i2">uid=jsmith,ou=people,dc=treedap,dc=com</span></div>
+                <div class="lc-line"><span class="lc-num">04</span><span class="lc-muted lc-i3">objectClass: person</span></div>
+                <div class="lc-line"><span class="lc-num">05</span><span class="lc-muted lc-i3">cn: John Smith</span></div>
+                <div class="lc-line"><span class="lc-num">06</span><span class="lc-muted lc-i3">uid: jsmith</span></div>
+                <div class="lc-line"><span class="lc-num">07</span><span class="lc-muted lc-i3">memberOf: cn=vpn-users,ou=groups</span></div>
+                <div class="lc-terminal">
+                  <span class="lc-prompt">filter&gt;</span>
+                  <span>(&amp;(objectClass=person)(uid=jsmith))</span>
+                </div>
+              </div>
             </div>
           </div>
-        </main>
+        </section>
       </div>
     </div>
 

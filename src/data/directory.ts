@@ -26,6 +26,12 @@ export const DIRECTORY: LdapEntry[] = [
     attributes: { ou: 'Computers', objectClass: ['top', 'organizationalUnit'], description: 'Workstations and servers' }
   },
 
+  // ── People sub-OUs ───────────────────────────────────────────────────────────
+  {
+    dn: 'ou=Contractors,ou=People,dc=treedap,dc=com',
+    attributes: { ou: 'Contractors', objectClass: ['top', 'organizationalUnit'], description: 'External contractors' }
+  },
+
   // ── Computers sub-OUs ────────────────────────────────────────────────────────
   {
     dn: 'ou=Workstations,ou=Computers,dc=treedap,dc=com',
@@ -163,7 +169,8 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Lisa Parker', givenName: 'Lisa', sn: 'Parker', uid: 'lisa.parker',
       mail: 'lisa.parker@treedap.com',
-      department: 'Engineering', title: 'Contractor', active: 'FALSE'
+      department: 'Engineering', title: 'Contractor', active: 'FALSE',
+      sAMAccountName: 'lisa.parker'
     }
   },
   {
@@ -172,7 +179,9 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Alice Smith', givenName: 'Alice', sn: 'Smith', uid: 'alice.smith',
       mail: 'alice@treedap.com', mobile: '+1-555-0101',
-      department: 'Engineering', title: 'Software Engineer', active: 'TRUE'
+      department: 'Engineering', title: 'Software Engineer', active: 'TRUE',
+      manager: 'uid=eve.davis,ou=People,dc=treedap,dc=com',
+      sAMAccountName: 'alice.smith'
     }
   },
   {
@@ -181,7 +190,8 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Bob Johnson', givenName: 'Bob', sn: 'Johnson', uid: 'bob.johnson',
       mail: 'bob@treedap.com', mobile: '+1-555-0102',
-      department: 'HR', title: 'HR Manager', active: 'TRUE'
+      department: 'HR', title: 'HR Manager', active: 'TRUE',
+      sAMAccountName: 'bob.johnson'
     }
   },
   {
@@ -190,7 +200,9 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Carol White', givenName: 'Carol', sn: 'White', uid: 'carol.white',
       mail: 'carol@treedap.com', mobile: '+1-555-0103',
-      department: 'Engineering', title: 'DevOps Engineer', active: 'TRUE'
+      department: 'Engineering', title: 'DevOps Engineer', active: 'TRUE',
+      manager: 'uid=eve.davis,ou=People,dc=treedap,dc=com',
+      sAMAccountName: 'carol.white'
     }
   },
   {
@@ -199,7 +211,8 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'David Brown', givenName: 'David', sn: 'Brown', uid: 'david.brown',
       mail: 'david@treedap.com', mobile: '+1-555-0104',
-      department: 'Finance', title: 'CFO', active: 'FALSE'
+      department: 'Finance', title: 'CFO', active: 'FALSE',
+      sAMAccountName: 'david.brown'
     }
   },
   {
@@ -208,7 +221,8 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Eve Davis', givenName: 'Eve', sn: 'Davis', uid: 'eve.davis',
       mail: 'eve@treedap.com', mobile: '+1-555-0105',
-      department: 'Engineering', title: 'CTO', active: 'TRUE'
+      department: 'Engineering', title: 'CTO', active: 'TRUE',
+      sAMAccountName: 'eve.davis'
     }
   },
   {
@@ -217,7 +231,9 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Frank Miller', givenName: 'Frank', sn: 'Miller', uid: 'frank.miller',
       mail: 'frank@treedap.com', mobile: '+1-555-0106',
-      department: 'HR', title: 'Recruiter', active: 'TRUE'
+      department: 'HR', title: 'Recruiter', active: 'TRUE',
+      pwdAccountLockedTime: '20240315143000Z',
+      sAMAccountName: 'frank.miller'
     }
   },
   {
@@ -226,7 +242,9 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Grace Lee', givenName: 'Grace', sn: 'Lee', uid: 'grace.lee',
       mail: 'grace@treedap.com', mobile: '+1-555-0107',
-      department: 'Finance', title: 'Controller', active: 'TRUE'
+      department: 'Finance', title: 'Controller', active: 'TRUE',
+      pwdChangedTime: '20230101120000Z',
+      sAMAccountName: 'grace.lee'
     }
   },
   {
@@ -235,7 +253,33 @@ export const DIRECTORY: LdapEntry[] = [
       objectClass: ['inetOrgPerson', 'top'],
       cn: 'Henry Scott', givenName: 'Henry', sn: 'Scott', uid: 'henry.scott',
       mail: 'henry@treedap.com', mobile: '+1-555-0108',
-      department: 'IT', title: 'Sysadmin', active: 'TRUE'
+      department: 'IT', title: 'Sysadmin', active: 'TRUE',
+      manager: 'uid=alice.smith,ou=People,dc=treedap,dc=com',
+      sAMAccountName: 'henry.scott'
+    }
+  },
+
+  // ── Contractors (sub-OU of People) ───────────────────────────────────────────
+  {
+    dn: 'uid=tom.harris,ou=Contractors,ou=People,dc=treedap,dc=com',
+    attributes: {
+      objectClass: ['inetOrgPerson', 'top'],
+      cn: 'Tom Harris', givenName: 'Tom', sn: 'Harris', uid: 'tom.harris',
+      mail: 'tom.harris@contractor.com', mobile: '+1-555-0201',
+      department: 'Engineering', title: 'Contractor', active: 'TRUE',
+      manager: 'uid=eve.davis,ou=People,dc=treedap,dc=com',
+      sAMAccountName: 'tom.harris'
+    }
+  },
+  {
+    dn: 'uid=sara.klein,ou=Contractors,ou=People,dc=treedap,dc=com',
+    attributes: {
+      objectClass: ['inetOrgPerson', 'top'],
+      cn: 'Sara Klein', givenName: 'Sara', sn: 'Klein', uid: 'sara.klein',
+      mail: 'sara.klein@contractor.com',
+      department: 'IT', title: 'Contractor', active: 'TRUE',
+      manager: 'uid=henry.scott,ou=People,dc=treedap,dc=com',
+      sAMAccountName: 'sara.klein'
     }
   },
 
@@ -259,7 +303,8 @@ export const DIRECTORY: LdapEntry[] = [
         'uid=alice.smith,ou=People,dc=treedap,dc=com',
         'uid=carol.white,ou=People,dc=treedap,dc=com',
         'uid=eve.davis,ou=People,dc=treedap,dc=com',
-        'uid=david.brown,ou=People,dc=treedap,dc=com'
+        'uid=david.brown,ou=People,dc=treedap,dc=com',
+        'cn=team-backend,ou=Groups,dc=treedap,dc=com'
       ]
     }
   },
@@ -306,13 +351,25 @@ export const DIRECTORY: LdapEntry[] = [
       ]
     }
   },
+  {
+    dn: 'cn=team-backend,ou=Groups,dc=treedap,dc=com',
+    attributes: {
+      objectClass: ['groupOfNames', 'top'], cn: 'team-backend',
+      description: 'Backend development sub-team (nested inside engineering)',
+      member: [
+        'uid=frank.miller,ou=People,dc=treedap,dc=com',
+        'uid=grace.lee,ou=People,dc=treedap,dc=com'
+      ]
+    }
+  },
 
   // ── Services ─────────────────────────────────────────────────────────────────
   {
     dn: 'cn=ldap-svc,ou=Services,dc=treedap,dc=com',
     attributes: {
       objectClass: ['account', 'top'], cn: 'ldap-svc', uid: 'ldap-svc',
-      description: 'LDAP Service Account'
+      description: 'LDAP Service Account',
+      shadowExpire: '19754'
     }
   },
   {

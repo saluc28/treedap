@@ -4,7 +4,7 @@ import { useApp } from '../../store/AppContext';
 import { DIRECTORY } from '../../data/directory';
 import { LEVELS } from '../../data/levels';
 import { executeFilter } from '../../engine/ldapEngine';
-import type { InvestigativeLevel, LdapEntry, LevelProgress, ValidationResult } from '../../engine/types';
+import type { FilterLevel, InvestigativeLevel, LdapEntry, LevelProgress, ValidationResult } from '../../engine/types';
 import { ObjectiveBar } from './ObjectiveBar';
 import { DirectoryTree } from './DirectoryTree';
 import { InlineConcept } from './InlineConcept';
@@ -55,34 +55,30 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
     const filter = state.queryInput.trim();
     if (!filter) return;
 
-    dispatch({ type: 'INCREMENT_ATTEMPTS' });
-
     try {
       const results = executeFilter(DIRECTORY, filter, level.baseDN, level.scope);
       const allResults = executeFilter(DIRECTORY, filter, 'dc=treedap,dc=com', 'sub');
-
-      if (isInvestigative) {
-        // Investigative levels: query is just an exploration tool, no auto-validation
-        dispatch({ type: 'SET_QUERY_RESULTS', payload: { results, allResults } });
-      } else {
-        const validation = level.validate(results);
-        dispatch({ type: 'SET_RESULTS', payload: { results, allResults, validation } });
-
-        if (validation.correct) {
-          const stars = computeStars(state.hintsUsed, state.attempts + 1);
-          progress.save(level.id, {
-            completed: true,
-            stars,
-            attempts: state.attempts + 1,
-          });
-          dispatch({ type: 'OPEN_CELEBRATION', payload: stars });
-        }
-      }
+      // Always just store results — verdict comes only on explicit submit
+      dispatch({ type: 'SET_QUERY_RESULTS', payload: { results, allResults } });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       dispatch({ type: 'SET_PARSE_ERROR', payload: msg });
     }
-  }, [state.queryInput, state.hintsUsed, state.attempts, level, isInvestigative, dispatch, progress]);
+  }, [state.queryInput, level, dispatch]);
+
+  const submitFilter = useCallback(() => {
+    if (!state.queryResults || isInvestigative) return;
+
+    dispatch({ type: 'INCREMENT_ATTEMPTS' });
+    const validation = (level as FilterLevel).validate(state.queryResults);
+    dispatch({ type: 'SET_VALIDATION', payload: validation });
+
+    if (validation.correct) {
+      const stars = computeStars(state.hintsUsed, state.attempts + 1);
+      progress.save(level.id, { completed: true, stars, attempts: state.attempts + 1 });
+      dispatch({ type: 'OPEN_CELEBRATION', payload: stars });
+    }
+  }, [state.queryResults, state.hintsUsed, state.attempts, level, isInvestigative, dispatch, progress]);
 
   const submitAnswer = useCallback(() => {
     if (!isInvestigative) return;
@@ -232,11 +228,15 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
             {/* Results */}
             <ResultsSection
               queryResults={state.queryResults}
+              allQueryResults={state.allQueryResults}
               validationResult={state.validationResult}
               parseError={state.parseError}
               currentHintIndex={state.currentHintIndex}
               hints={level.hints}
               isInvestigative={isInvestigative}
+              levelBaseDN={level.baseDN}
+              levelScope={level.scope}
+              onSubmit={submitFilter}
             />
 
             {/* Answer submission — investigative levels only */}
@@ -297,14 +297,18 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
 
 interface ResultsSectionProps {
   queryResults: LdapEntry[] | null;
+  allQueryResults: LdapEntry[] | null;
   validationResult: ValidationResult | null;
   parseError: string | null;
   currentHintIndex: number;
   hints: string[];
   isInvestigative: boolean;
+  levelBaseDN: string;
+  levelScope: string;
+  onSubmit: () => void;
 }
 
-function ResultsSection({ queryResults, validationResult, parseError, currentHintIndex, hints, isInvestigative }: ResultsSectionProps) {
+function ResultsSection({ queryResults, allQueryResults, validationResult, parseError, currentHintIndex, hints, isInvestigative, levelBaseDN, levelScope, onSubmit }: ResultsSectionProps) {
   if (!queryResults && !parseError && currentHintIndex < 0) {
     return (
       <div className="results-section">
@@ -316,6 +320,8 @@ function ResultsSection({ queryResults, validationResult, parseError, currentHin
       </div>
     );
   }
+
+  const canSubmit = !isInvestigative && queryResults !== null && !validationResult?.correct;
 
   return (
     <div className="results-section">
@@ -366,10 +372,42 @@ function ResultsSection({ queryResults, validationResult, parseError, currentHin
       )}
 
       {queryResults && queryResults.length === 0 && !parseError && (
-        <div className="results-empty">
-          <div className="results-empty-icon">📭</div>
-          <div className="results-empty-text">No results</div>
-          <div className="results-empty-sub">Your filter did not match any entries</div>
+        allQueryResults && allQueryResults.length > 0 ? (
+          <>
+            <div className="result-verdict incorrect" style={{ marginBottom: '8px' }}>
+              <span className="verdict-emoji">⚠️</span>
+              <div className="verdict-text">
+                <div className="verdict-title incorrect">Outside exercise scope</div>
+                <div className="verdict-detail">
+                  These entries are not within <code>baseDN: {levelBaseDN}</code>, scope: <code>{levelScope}</code> - they won't count for validation.
+                </div>
+              </div>
+            </div>
+            <div className="results-header">
+              <span className="results-count">
+                <span className="num">{allQueryResults.length}</span> {allQueryResults.length === 1 ? 'result' : 'results'} found (outside scope)
+              </span>
+            </div>
+            {allQueryResults.map((entry) => (
+              <ResultEntry key={entry.dn} entry={entry} />
+            ))}
+          </>
+        ) : (
+          <div className="results-empty">
+            <div className="results-empty-icon">📭</div>
+            <div className="results-empty-text">No results</div>
+            <div className="results-empty-sub">Your filter did not match any entries</div>
+          </div>
+        )
+      )}
+
+      {/* Submit bar - visible after first run, for non-investigative levels */}
+      {canSubmit && (
+        <div className="submit-bar">
+          <span className="submit-bar-hint">Happy with these results?</span>
+          <button className="btn btn-primary btn-sm" onClick={onSubmit}>
+            ✓ Submit answer
+          </button>
         </div>
       )}
     </div>
