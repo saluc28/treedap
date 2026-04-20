@@ -17,7 +17,7 @@ function loadInitialState(): AppState {
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return initialState;
     const { screen, currentLevelId } = JSON.parse(raw);
-    if (screen === 'dashboard' || (screen === 'level' && currentLevelId != null)) {
+    if (screen === 'dashboard' || screen === 'free-mode' || (screen === 'level' && currentLevelId != null)) {
       return { ...initialState, screen, currentLevelId };
     }
   } catch {

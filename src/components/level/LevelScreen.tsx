@@ -8,6 +8,7 @@ import type { FilterLevel, InvestigativeLevel, LdapEntry, LevelProgress, Validat
 import { ObjectiveBar } from './ObjectiveBar';
 import { DirectoryTree } from './DirectoryTree';
 import { InlineConcept } from './InlineConcept';
+import { MobileWall } from '../MobileWall';
 
 interface UseProgressReturn {
   save: (levelId: number, update: Partial<LevelProgress>) => void;
@@ -58,7 +59,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
     try {
       const results = executeFilter(DIRECTORY, filter, level.baseDN, level.scope);
       const allResults = executeFilter(DIRECTORY, filter, 'dc=treedap,dc=com', 'sub');
-      // Always just store results — verdict comes only on explicit submit
+      // Always just store results - verdict comes only on explicit submit
       dispatch({ type: 'SET_QUERY_RESULTS', payload: { results, allResults } });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -116,19 +117,15 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
     <div id="screen-level" className="screen">
 
       {/* Mobile wall - visible only on small viewports via CSS, zero SEO impact */}
-      <div className="mobile-wall">
-        <div className="mobile-wall-icon">🖥️</div>
-        <div className="mobile-wall-title">Best experienced on desktop</div>
-        <div className="mobile-wall-body">
-          TreeDap is a hands-on LDAP query trainer that needs a full keyboard and screen to work properly.
-        </div>
-        <div className="mobile-wall-hint">Open this page on a laptop or desktop to start the course.</div>
-      </div>
+      <MobileWall />
 
       {/* Header */}
       <header className="level-header">
         <div className="level-header-left">
-          <button className="btn btn-ghost btn-sm" onClick={onBack}>🌳 Dashboard</button>
+          <button className="btn btn-ghost btn-sm lv-dashboard-btn" onClick={onBack}>
+            <img src="/logo.svg" alt="" className="lv-dashboard-logo" />
+            Dashboard
+          </button>
           <div>
             <div className="level-header-title">Level {level.id}: {level.title}</div>
             <div className="level-header-sub">
@@ -239,7 +236,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
               onSubmit={submitFilter}
             />
 
-            {/* Answer submission — investigative levels only */}
+            {/* Answer submission - investigative levels only */}
             {isInvestigative && (
               <AnswerSection
                 level={level as InvestigativeLevel}
@@ -250,7 +247,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
               />
             )}
 
-            {/* Next Lesson bar — always visible, locked until exercise is solved */}
+            {/* Next Lesson bar - always visible, locked until exercise is solved */}
             {(() => {
               const done = isInvestigative
                 ? !!state.answerResult?.correct
@@ -468,20 +465,6 @@ function AnswerSection({ level, answerInput, answerResult, onAnswerChange, onSub
         {level.answerType === 'boolean' && (
           <div className="answer-bool-group">
             {['Yes', 'No'].map((opt) => (
-              <button
-                key={opt}
-                className={`btn btn-secondary btn-sm ${answerInput === opt ? 'answer-bool-active' : ''}`}
-                onClick={() => onAnswerChange(opt)}
-                disabled={!!answerResult?.correct}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        )}
-        {level.answerType === 'choice' && level.answerOptions && (
-          <div className="answer-bool-group">
-            {level.answerOptions.map((opt) => (
               <button
                 key={opt}
                 className={`btn btn-secondary btn-sm ${answerInput === opt ? 'answer-bool-active' : ''}`}

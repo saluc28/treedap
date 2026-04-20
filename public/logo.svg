@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#6fe37e"/>
-      <stop offset="1" stop-color="#3fb052"/>
+      <stop offset="0" stop-color="#5fd36e"/>
+      <stop offset="1" stop-color="#2d9040"/>
     </linearGradient>
     <linearGradient id="trunk" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#9a7548"/>
@@ -10,12 +10,12 @@
     </linearGradient>
   </defs>
 
-  <rect width="100" height="100" rx="20" fill="#0f1a2e"/>
-
+  <!-- Soft canopy silhouette (subtle halo, gives "tree" shape even at tiny sizes) -->
   <path d="M50 6 L14 70 Q10 76 18 76 L82 76 Q90 76 86 70 Z"
-        fill="url(#leaf)" opacity="0.22"/>
+        fill="url(#leaf)" opacity="0.18"/>
 
-  <g stroke="#4bbf5a" stroke-width="3" stroke-linecap="round" fill="none">
+  <!-- Branches (directory edges) -->
+  <g stroke="#2d9040" stroke-width="3" stroke-linecap="round" fill="none">
     <path d="M50 14 L28 42"/>
     <path d="M50 14 L72 42"/>
     <path d="M28 42 L18 68"/>
@@ -24,6 +24,7 @@
     <path d="M72 42 L82 68"/>
   </g>
 
+  <!-- Directory nodes (form triangular tree outline) -->
   <circle cx="50" cy="14" r="8" fill="url(#leaf)"/>
   <circle cx="28" cy="42" r="6.5" fill="url(#leaf)"/>
   <circle cx="72" cy="42" r="6.5" fill="url(#leaf)"/>
@@ -32,5 +33,6 @@
   <circle cx="60" cy="68" r="5.5" fill="url(#leaf)"/>
   <circle cx="82" cy="68" r="5.5" fill="url(#leaf)"/>
 
+  <!-- Trunk -->
   <rect x="44" y="72" width="12" height="22" rx="3" fill="url(#trunk)"/>
 </svg>

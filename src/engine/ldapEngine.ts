@@ -12,10 +12,10 @@ function matchesSingle(entryVal: string, filterVal: string): boolean {
   // Presence
   if (fv === '*') return true;
 
-  // No wildcards — exact match
+  // No wildcards - exact match
   if (!fv.includes('*')) return ev === fv;
 
-  // Wildcard matching — convert to regex
+  // Wildcard matching - convert to regex
   const parts = fv.split('*');
   let regex = '^';
   for (let i = 0; i < parts.length; i++) {

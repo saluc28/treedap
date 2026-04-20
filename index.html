@@ -2,12 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary SEO -->
-    <title>TreeDap - LDAP Troubleshooting Scenarios</title>
-    <meta name="description" content="16 real-world LDAP troubleshooting scenarios for sysadmins, IAM engineers, and security professionals. Diagnose broken logins, misconfigured bind accounts, scope bugs, and more. Free, browser-based, no signup." />
+    <title>TreeDap - LDAP Troubleshooting Trainer</title>
+    <meta name="description" content="17 real-world LDAP troubleshooting scenarios for sysadmins, IAM engineers, and security professionals. Diagnose broken logins, misconfigured bind accounts, scope bugs, and more. Free, browser-based, no signup." />
     <meta name="keywords" content="LDAP troubleshooting, LDAP filter, Active Directory troubleshooting, LDAP debugging, IAM engineer, sysadmin LDAP, OpenLDAP tutorial, LDAP baseDN scope, LDAP bind DN, LDAP scenarios, identity and access management, directory services, LDAP course, learn LDAP, LDAP for sysadmins, LDAP security, Active Directory authentication, LDAP filter syntax, free LDAP training" />
     <link rel="canonical" href="https://treedap.com/" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
@@ -20,28 +21,35 @@
     <!-- Open Graph (LinkedIn, Facebook, Slack previews) -->
     <meta property="og:type"        content="website" />
     <meta property="og:url"         content="https://treedap.com/" />
-    <meta property="og:title"       content="TreeDap - LDAP Troubleshooting Scenarios" />
-    <meta property="og:description" content="16 real-world LDAP troubleshooting scenarios for sysadmins, IAM engineers, and security professionals. Diagnose broken logins, misconfigured bind accounts, scope bugs, and more. Free, no signup." />
+    <meta property="og:title"       content="TreeDap - LDAP Troubleshooting Trainer" />
+    <meta property="og:description" content="17 real-world LDAP troubleshooting scenarios for sysadmins, IAM engineers, and security professionals. Diagnose broken logins, misconfigured bind accounts, scope bugs, and more. Free, no signup." />
     <meta property="og:site_name"   content="TreeDap" />
+    <meta property="og:image"        content="https://treedap.com/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"    content="TreeDap - LDAP Troubleshooting Trainer" />
+    <meta property="og:logo"         content="https://treedap.com/logo-512.png" />
 
     <!-- Twitter / X Card -->
-    <meta name="twitter:card"        content="summary" />
-    <meta name="twitter:title"       content="TreeDap - LDAP Troubleshooting Scenarios" />
-    <meta name="twitter:description" content="16 real-world LDAP troubleshooting scenarios for sysadmins and IAM engineers. Diagnose broken logins, scope bugs, bind account issues, and more. Free, browser-based, no signup." />
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="TreeDap - LDAP Troubleshooting Trainer" />
+    <meta name="twitter:description" content="17 real-world LDAP troubleshooting scenarios for sysadmins and IAM engineers. Diagnose broken logins, scope bugs, bind account issues, and more. Free, browser-based, no signup." />
+    <meta name="twitter:image"       content="https://treedap.com/og-image.png" />
 
     <!-- JSON-LD: Course structured data (Google rich results) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Course",
-      "name": "LDAP Troubleshooting Scenarios — TreeDap",
-      "description": "16 real-world LDAP troubleshooting scenarios for sysadmins, IAM engineers, and security professionals. Diagnose broken logins, misconfigured bind accounts, scope bugs, nested group failures, anonymous bind exposure, and more.",
+      "name": "LDAP Troubleshooting Trainer - TreeDap",
+      "description": "17 real-world LDAP troubleshooting scenarios for sysadmins, IAM engineers, and security professionals. Diagnose broken logins, misconfigured bind accounts, scope bugs, nested group failures, anonymous bind exposure, and more.",
       "provider": {
         "@type": "Organization",
         "name": "TreeDap",
-        "url": "https://treedap.com"
+        "url": "https://treedap.com",
+        "logo": "https://treedap.com/logo-512.png"
       },
-      "educationalLevel": "Intermediate to Advanced",
+      "educationalLevel": "Beginner to Advanced",
       "isAccessibleForFree": true,
       "inLanguage": "en",
       "teaches": [
@@ -62,7 +70,7 @@
     </script>
 
     <!--
-      Critical CSS — inlined so the landing page paints immediately,
+      Critical CSS - inlined so the landing page paints immediately,
       before any JS or external CSS file arrives.
     -->
     <style>
@@ -107,7 +115,7 @@
         display: flex; align-items: center; justify-content: space-between;
       }
       .landing-logo { display: flex; align-items: center; gap: 10px; }
-      .landing-logo-icon { font-size: 22px; line-height: 1; }
+      .landing-logo-icon { width: 26px; height: 26px; display: block; }
       .landing-logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: #004277; }
       .landing-logo-accent { color: #4b607c; }
 
@@ -201,7 +209,7 @@
   <body>
     <!--
       Static landing-page shell.
-      Visible immediately — before any JS downloads.
+      Visible immediately - before any JS downloads.
       React mounts over this once the bundle arrives; appearance is identical.
       The CTA button is intentionally disabled until JS is ready.
       The inline script hides the shell synchronously if the user should land
@@ -226,7 +234,7 @@
         <header class="landing-header">
           <div class="landing-header-inner">
             <div class="landing-logo">
-              <span class="landing-logo-icon">🌳</span>
+              <img src="/logo.svg" alt="TreeDap logo" class="landing-logo-icon" />
               <span class="landing-logo-text">Tree<span class="landing-logo-accent">Dap</span></span>
             </div>
             <button class="btn btn-primary" disabled style="opacity:0.7;cursor:wait">Start Learning</button>
@@ -238,7 +246,7 @@
             <div class="landing-hero-text">
               <div class="landing-badge">
                 <span class="landing-badge-dot"></span>
-                <span>16 Real-World Troubleshooting Scenarios</span>
+                <span>17 Real-World Troubleshooting Scenarios</span>
               </div>
               <h1 class="landing-title">LDAP doesn't tell you<br>when you're <em>wrong.</em></h1>
               <p class="landing-description">
@@ -251,7 +259,7 @@
                 <button class="btn btn-primary btn-lg" disabled style="opacity:0.7;cursor:wait">Start Learning →</button>
                 <div class="landing-stats">
                   <div class="landing-stat">
-                    <span class="landing-stat-num">16</span>
+                    <span class="landing-stat-num">17</span>
                     <span class="landing-stat-label">Scenarios</span>
                   </div>
                   <div class="landing-stat">
@@ -295,5 +303,8 @@
     </div>
 
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Vercel Web Analytics (privacy-friendly, no cookies). Enable in Vercel dashboard > Analytics. -->
+    <script defer src="/_vercel/insights/script.js"></script>
   </body>
 </html>

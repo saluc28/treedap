@@ -57,22 +57,23 @@ export const LEVELS: Level[] = [
     id: 1,
     title: "The Directory",
     difficulty: "beginner",
-    context: "Before touching any query, you need to understand what you are looking at. An LDAP directory is a tree of entries. Every entry has a unique address called a DN (Distinguished Name) - think of it as a file path but read right to left. The root of this directory is <code>dc=treedap,dc=com</code>. Directly under it sit four containers called Organizational Units (OUs): one for people, one for groups, one for services, one for computers. Expand the tree on the left and click a few entries to see their attributes. The Concept panel above has more detail whenever you need it.",
-    task: "How many Organizational Units exist as direct children of dc=treedap,dc=com?",
+    context: "Welcome. Before writing any filter, look at what you have on screen. The tree on the left is the directory - a hierarchy of entries. Every entry has a unique address called a <strong>DN</strong> (Distinguished Name), read right-to-left like a reverse file path: <code>uid=alice.smith,ou=People,dc=treedap,dc=com</code> means 'Alice, inside the People container, inside the treedap.com domain'. The root here is <code>dc=treedap,dc=com</code>. Expand it and you will see its direct children. Click a couple of them to see their attributes in the right panel - that is what every LDAP query ultimately returns.<br><br>Every entry declares what it is through an <code>objectClass</code> attribute. Containers carry <code>objectClass=organizationalUnit</code>, person entries carry <code>inetOrgPerson</code>, groups carry <code>groupOfNames</code>. Filtering on objectClass is how you ask the directory 'show me only entries of this type'.<br><br>Below the tree there is a filter bar. That is where the real work happens. Your first task is to use it.",
+    task: "Find the top-level organizational units - the containers directly under the root",
     baseDN: "dc=treedap,dc=com",
     scope: "one",
-    answerType: "number" as const,
-    answerPrompt: "How many OUs are direct children of dc=treedap,dc=com?",
-    hints: [
-      "Run the filter <code>(objectClass=organizationalUnit)</code>. Every container in an LDAP directory declares itself as an <code>organizationalUnit</code> via its <code>objectClass</code> attribute.",
-      "The baseDN is <code>dc=treedap,dc=com</code> and scope is <code>one</code> - so you are only looking at direct children of the root, one level deep. Sub-containers inside People or Computers are not included.",
-      "Count the results. Each one is a top-level OU - a logical grouping that tells you how this organisation has divided its directory."
+    expectedDNs: [
+      "ou=People,dc=treedap,dc=com",
+      "ou=Groups,dc=treedap,dc=com",
+      "ou=Services,dc=treedap,dc=com",
+      "ou=Computers,dc=treedap,dc=com"
     ],
-    validateAnswer(answer: string): ValidationResult {
-      const n = parseInt(answer.trim(), 10);
-      if (n === 4) return { correct: true, feedback: "Correct. Four OUs at the top level: People, Groups, Services, Computers. This is a typical flat structure for a small organisation. In larger enterprises you might find dozens of OUs nested several levels deep - which is exactly why scope and baseDN matter so much when you write a query." };
-      if (n < 4) return { correct: false, feedback: "There are more. Run (objectClass=organizationalUnit) and count every result returned." };
-      return { correct: false, feedback: "Too many. Make sure scope is set to one - you should only be seeing direct children of the root, not entries deeper in the tree." };
+    hints: [
+      "An LDAP filter uses the form <code>(attribute=value)</code> with parentheses. The attribute here is <code>objectClass</code> and the value is the name of the entry type you are looking for.",
+      "Containers in LDAP are entries of type <code>organizationalUnit</code>. Your filter is <code>(objectClass=organizationalUnit)</code>. The scope is already set to <code>one</code> which means 'only direct children of the baseDN' - exactly what you want.",
+      "Type <code>(objectClass=organizationalUnit)</code> in the filter bar and press Run. You should get four results - People, Groups, Services, Computers. These are the top-level containers of the directory. Every entry you will work with in later levels lives inside one of them."
+    ],
+    validate(result: LdapEntry[]): ValidationResult {
+      return validateByDNSet(result, this.expectedDNs, '(objectClass=organizationalUnit)');
     }
   },
 
@@ -109,23 +110,36 @@ export const LEVELS: Level[] = [
 
   {
     id: 3,
-    title: "BaseDN and Scope",
+    title: "The Asset Audit",
     difficulty: "beginner",
-    context: "Every LDAP query has two parameters that control where the server looks - and getting either wrong means finding nothing even if your filter is perfect. The <strong>baseDN</strong> is the entry where the search starts. The server never looks above it. The <strong>scope</strong> controls how deep it goes from there: <code>base</code> checks only the baseDN entry itself, <code>one</code> checks its direct children only, <code>sub</code> descends recursively through the entire subtree. This exercise uses <code>scope=one</code> from the root. Think about what that means before you run anything.",
-    task: "Run (objectClass=inetOrgPerson) and report how many person accounts scope=one finds from dc=treedap,dc=com",
-    baseDN: "dc=treedap,dc=com",
-    scope: "one",
-    answerType: "number" as const,
-    answerPrompt: "How many person accounts does scope=one return from dc=treedap,dc=com?",
-    hints: [
-      "Run <code>(objectClass=inetOrgPerson)</code> and count the results. Think about what scope <code>one</code> means: it only searches the direct children of <code>dc=treedap,dc=com</code>. Are any person accounts stored directly there?",
-      "The direct children of the root are the four top-level OUs: People, Groups, Services, Computers. Person accounts live inside the People OU - which is a level deeper. Scope <code>one</code> stops before it ever reaches them.",
-      "The answer makes the point clearly. This is exactly the kind of misconfiguration that produces zero results with a perfectly correct filter - and it is one of the most common LDAP bugs in production apps."
+    contextType: "jira" as const,
+    contextMeta: {
+      type: 'jira' as const,
+      ticketId: 'TD-145',
+      issueType: 'Task' as const,
+      priority: 'Medium' as const,
+      ticketTitle: 'Quarterly inventory - list every employee workstation',
+      reporter: 'Sofia Russo (IT Asset Management)',
+    },
+    context: "IT Asset Management needs a list of every employee workstation for the quarterly audit. The directory stores all computers under <code>ou=Computers</code>, split between workstations and servers. By convention, workstation entries are named with a <code>ws-</code> prefix (e.g. <code>cn=ws-alice</code>), while servers use <code>srv-</code>. Both are stored as <code>objectClass=device</code> - so filtering on objectClass alone would give you servers too. You need to combine two conditions: the objectClass and a pattern match on the cn. LDAP supports wildcards in equality filters: <code>(cn=ws-*)</code> matches any entry whose cn starts with <code>ws-</code>.",
+    task: "Find every employee workstation in the directory (cn starts with ws-, objectClass is device)",
+    baseDN: "ou=Computers,dc=treedap,dc=com",
+    scope: "sub",
+    expectedDNs: [
+      "cn=ws-david,ou=Workstations,ou=Computers,dc=treedap,dc=com",
+      "cn=ws-lisa,ou=Workstations,ou=Computers,dc=treedap,dc=com",
+      "cn=ws-alice,ou=Workstations,ou=Computers,dc=treedap,dc=com",
+      "cn=ws-carol,ou=Workstations,ou=Computers,dc=treedap,dc=com",
+      "cn=ws-henry,ou=Workstations,ou=Computers,dc=treedap,dc=com",
+      "cn=ws-bob,ou=Workstations,ou=Computers,dc=treedap,dc=com"
     ],
-    validateAnswer(answer: string): ValidationResult {
-      const n = parseInt(answer.trim(), 10);
-      if (n === 0) return { correct: true, feedback: "Correct. Zero results - not because the filter is wrong, but because scope=one from the root only sees the four top-level OUs. Person accounts are inside ou=People, which is one level deeper than scope=one will go. The fix is scope=sub, or a more specific baseDN like ou=People,dc=treedap,dc=com with scope=sub. You will see this exact mistake in several of the upcoming scenarios." };
-      return { correct: false, feedback: "Run the filter and look at the result count. With scope=one from dc=treedap,dc=com, what are the direct children you can actually reach?" };
+    hints: [
+      "You need two conditions combined with AND: <code>(&(condition1)(condition2))</code>. One condition fixes the objectClass, the other matches the naming pattern.",
+      "The wildcard <code>*</code> matches any sequence of characters inside an equality filter. <code>(cn=ws-*)</code> matches every cn beginning with <code>ws-</code> - it will exclude all the <code>srv-*</code> entries.",
+      "Try: <code>(&(objectClass=device)(cn=ws-*))</code>. This returns the six workstations and nothing else - no servers, no OU containers, no unrelated entries."
+    ],
+    validate(result: LdapEntry[]): ValidationResult {
+      return validateByDNSet(result, this.expectedDNs, '(&(objectClass=device)(cn=ws-*))');
     }
   },
 
@@ -311,34 +325,35 @@ export const LEVELS: Level[] = [
     }
   },
 
-  // ── ADVANCED (Levels 10-16) ──────────────────────────────────────────────────
+  // ── ADVANCED (Levels 10-17) ──────────────────────────────────────────────────
 
   {
     id: 10,
-    title: "Active But Blocked",
+    title: "The Lockout Audit",
     difficulty: "advanced",
-    contextType: "teams" as const,
+    contextType: "jira" as const,
     contextMeta: {
-      type: 'teams' as const,
-      sender: 'Frank Miller',
-      senderRole: 'Recruiter - HR',
-      avatarColor: '#c43e1c',
-      timestamp: 'Today 08:51',
+      type: 'jira' as const,
+      ticketId: 'TD-412',
+      issueType: 'Task' as const,
+      priority: 'High' as const,
+      ticketTitle: 'Generate list of accounts currently locked by ppolicy',
+      reporter: 'Sofia Russo (Security Operations)',
     },
-    context: "Hi, I cannot log in since yesterday evening. IT reset my password this morning and confirmed it is correct. I can see my account is active in the system. I tried three times and still get 'authentication failed'. Can you check what is wrong? The app code checks <code>active=TRUE</code> before allowing login, and Frank's account has exactly that. But <code>active</code> is an application-level attribute - it has nothing to do with the directory's own lockout mechanism. A directory can lock an account independently after too many failed attempts, regardless of <code>active</code>.",
-    task: "Investigate Frank Miller's account - is it locked by the directory's password policy?",
+    context: "Security Operations is investigating a brute-force wave from last night. They need a definitive list of every person account currently locked by the directory's password policy, so helpdesk can reset them in one batch. Application-level flags like <code>active</code> are useless for this - those are set by HR systems, not by the directory. OpenLDAP's ppolicy overlay records a directory-level lockout in the <code>pwdAccountLockedTime</code> attribute. An account has this attribute if and only if ppolicy has locked it. The presence filter <code>(attr=*)</code> matches any entry that has the attribute set, regardless of its value - exactly what you need here.",
+    task: "Find every person account currently locked by the directory password policy",
     baseDN: "ou=People,dc=treedap,dc=com",
     scope: "sub",
-    answerType: "boolean" as const,
-    answerPrompt: "Is Frank Miller's account locked by a directory password policy?",
-    hints: [
-      "The <code>active</code> attribute is application-defined - it is checked by the app logic, not by LDAP itself. The directory has its own lockout mechanism stored in a different attribute.",
-      "OpenLDAP's password policy overlay records lockouts in the <code>pwdAccountLockedTime</code> attribute. If this attribute is present on an entry, the account is locked at the directory level regardless of any application-side checks.",
-      "Run <code>(uid=frank.miller)</code> and inspect Frank's entry carefully. Look for any attribute related to password or lockout state."
+    expectedDNs: [
+      "uid=frank.miller,ou=People,dc=treedap,dc=com"
     ],
-    validateAnswer(answer: string): ValidationResult {
-      if (answer === 'Yes') return { correct: true, feedback: "Correct. Frank's entry has <code>pwdAccountLockedTime</code> set, which means the directory's password policy overlay has locked the account after repeated failed attempts. The app only checks <code>active=TRUE</code> and misses this entirely. The fix: the app must handle LDAP error code 53 (unwillingToPerform) or 49 with sub-code 775 (account locked), not just check the active attribute." };
-      return { correct: false, feedback: "Look more carefully. Run a query for Frank's account and read all the attributes returned. There is one that indicates a directory-level lockout." };
+    hints: [
+      "You need two conditions combined with AND: the entry must be a person account, AND it must have the lockout attribute set. Use the presence filter <code>(attr=*)</code> for the second part.",
+      "The lockout attribute is <code>pwdAccountLockedTime</code>. An entry either has it (locked) or does not (not locked). Its exact value - a GeneralizedTime string - is irrelevant for the audit.",
+      "Try: <code>(&(objectClass=inetOrgPerson)(pwdAccountLockedTime=*))</code>. Every result is an account the app's <code>active=TRUE</code> check would wrongly let through - the directory will still refuse every bind."
+    ],
+    validate(result: LdapEntry[]): ValidationResult {
+      return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(pwdAccountLockedTime=*))');
     }
   },
 
@@ -412,20 +427,21 @@ export const LEVELS: Level[] = [
       avatarColor: '#c43e1c',
       timestamp: 'Today 14:22',
     },
-    context: "Hi, I still can't access the engineering portal. My manager told me I should have access because I'm in the engineering group via the backend team. The access control checks <code>(member=frank.miller-dn)</code> directly on the <code>cn=engineering</code> group entry. Standard LDAP search does not follow nested group membership. <code>cn=team-backend</code> is listed as a member of <code>cn=engineering</code>, and Frank is a member of <code>cn=team-backend</code> - but that chain is invisible to a flat <code>member</code> check.",
-    task: "Check whether Frank Miller is a direct member of the engineering group",
+    context: "Hi, I still can't access the engineering portal. My manager told me I should have access because I'm in the engineering group via the backend team. The access control reads the groups that list Frank directly and denies if engineering is not among them. Standard LDAP search does not follow nested group membership: <code>cn=team-backend</code> is listed as a member of <code>cn=engineering</code>, and Frank is a member of <code>cn=team-backend</code> - but that chain is invisible to a flat <code>member</code> check. To prove the problem, enumerate exactly the groups that list Frank's DN directly. If <code>cn=engineering</code> is not in that list, the app will always deny him.",
+    task: "List every group that has Frank Miller's DN as a direct member (no nesting)",
     baseDN: "ou=Groups,dc=treedap,dc=com",
     scope: "sub",
-    answerType: "boolean" as const,
-    answerPrompt: "Is Frank Miller a direct (non-nested) member of the engineering group?",
-    hints: [
-      "Search the Groups OU for the engineering group entry and look at its <code>member</code> attribute values. Direct members are listed there as full DNs. If Frank's DN is not in that list, he is not a direct member.",
-      "Try <code>(&(cn=engineering)(member=uid=frank.miller,ou=People,dc=treedap,dc=com))</code>. If this returns the engineering group, Frank is a direct member. If it returns nothing, he is not.",
-      "Zero results from that filter means Frank is only reachable through a nested group. Standard LDAP has no recursive memberOf expansion - the app's access check will always return false for Frank unless it is updated to resolve nested groups."
+    expectedDNs: [
+      "cn=hr-team,ou=Groups,dc=treedap,dc=com",
+      "cn=team-backend,ou=Groups,dc=treedap,dc=com"
     ],
-    validateAnswer(answer: string): ValidationResult {
-      if (answer === 'No') return { correct: true, feedback: "Correct. Frank is only in cn=team-backend, which is itself listed as a member of cn=engineering. Standard LDAP does not resolve this chain. The app's filter (member=frank-dn) on the engineering group returns nothing. Fix options: (1) add Frank directly to engineering, (2) implement recursive group expansion in the app, or (3) use an LDAP server with memberOf overlay that handles nesting automatically." };
-      return { correct: false, feedback: "Run the filter and check the result. Look at the engineering group's member values directly - does Frank's exact DN appear there, or only cn=team-backend?" };
+    hints: [
+      "You need an AND filter combining two conditions: the entry is a group, AND its <code>member</code> attribute contains Frank's exact DN. The <code>member</code> attribute stores each member as a full DN string, so matching on it is an exact equality.",
+      "Frank's DN is <code>uid=frank.miller,ou=People,dc=treedap,dc=com</code>. Groups use <code>objectClass=groupOfNames</code>. The filter is <code>(&(objectClass=groupOfNames)(member=uid=frank.miller,ou=People,dc=treedap,dc=com))</code>.",
+      "You will get two results - <code>hr-team</code> and <code>team-backend</code>. Crucially, <code>engineering</code> is NOT among them, even though team-backend is nested inside it. Standard LDAP has no recursive memberOf expansion: the app must resolve nesting itself or the directory must run the memberOf overlay."
+    ],
+    validate(result: LdapEntry[]): ValidationResult {
+      return validateByDNSet(result, this.expectedDNs, '(&(objectClass=groupOfNames)(member=uid=frank.miller,ou=People,dc=treedap,dc=com))');
     }
   },
 
@@ -500,31 +516,68 @@ export const LEVELS: Level[] = [
 
   {
     id: 16,
+    title: "The Invisible Primary Group",
+    difficulty: "advanced",
+    contextType: "email" as const,
+    contextMeta: {
+      type: 'email' as const,
+      from: 'Luca Ferretti',
+      fromRole: 'Backend Developer',
+      subject: 'Domain Users access broken after AD sync',
+      date: 'Sat, 18 Apr 2026, 10:14',
+    },
+    context: "After last week's Active Directory sync, the internal portal denies access to every regular employee. The portal's access control reads the <code>member</code> attribute of <code>cn=domain-users</code> - which on AD-synced directories is always empty. Active Directory does not store the user's primary group as a <code>member</code> link: it stores the numeric <code>primaryGroupID</code> on the user entry instead. By convention, RID <code>513</code> is <code>Domain Users</code> (every regular employee), and <code>514</code> is <code>Domain Guests</code> (contractors and external accounts). To size the impact, produce the definitive list of every person account that belongs to Domain Users via their primary group - the users the portal is wrongly denying.",
+    task: "Find every person account whose primary group is Domain Users (RID 513)",
+    baseDN: "ou=People,dc=treedap,dc=com",
+    scope: "sub",
+    expectedDNs: [
+      "uid=lisa.parker,ou=People,dc=treedap,dc=com",
+      "uid=alice.smith,ou=People,dc=treedap,dc=com",
+      "uid=bob.johnson,ou=People,dc=treedap,dc=com",
+      "uid=carol.white,ou=People,dc=treedap,dc=com",
+      "uid=david.brown,ou=People,dc=treedap,dc=com",
+      "uid=eve.davis,ou=People,dc=treedap,dc=com",
+      "uid=frank.miller,ou=People,dc=treedap,dc=com",
+      "uid=grace.lee,ou=People,dc=treedap,dc=com",
+      "uid=henry.scott,ou=People,dc=treedap,dc=com"
+    ],
+    hints: [
+      "Click any employee's entry in the tree and look at their attributes. After the AD sync, a new numeric attribute appeared - it stores the RID of their primary group directly on the user, not as a group <code>member</code> link.",
+      "The attribute is <code>primaryGroupID</code>. Employees carry <code>513</code> (Domain Users), contractors carry <code>514</code> (Domain Guests). Combine this with <code>objectClass=inetOrgPerson</code> using AND.",
+      "Try: <code>(&(objectClass=inetOrgPerson)(primaryGroupID=513))</code>. The fix on the portal side: when the target group is the primary group of a user, it is never listed in <code>member</code>. The access check must query <code>primaryGroupID</code> separately, or resolve Domain Users specially."
+    ],
+    validate(result: LdapEntry[]): ValidationResult {
+      return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(primaryGroupID=513))');
+    }
+  },
+
+  {
+    id: 17,
     title: "The Full Tree Tax",
     difficulty: "advanced",
     contextType: "jira" as const,
     contextMeta: {
       type: 'jira' as const,
-      ticketId: 'TD-389',
+      ticketId: 'TD-421',
       issueType: 'Task' as const,
       priority: 'Medium' as const,
       ticketTitle: 'Login latency spike under load - LDAP search timeout',
       reporter: 'APM Alert (automated)',
     },
-    context: "Under load, user login takes 6-8 seconds and occasionally times out. Profiling shows the bottleneck is the LDAP search. The app uses <code>baseDN=dc=treedap,dc=com</code>, scope <code>sub</code>, filter <code>(objectClass=inetOrgPerson)</code>. The LDAP server scans every single entry in the directory to evaluate the filter - computers, servers, service accounts, groups, OUs - before returning the few person accounts it is actually looking for. The fix is obvious once you measure the gap: restrict the baseDN to the OU that actually contains your users.",
-    task: "Compare the total entries scanned from the root vs from ou=People - report the total count from the root",
+    context: "Under load, user login takes 6-8 seconds and occasionally times out. Profiling shows the bottleneck is the LDAP search. The app uses <code>baseDN=dc=treedap,dc=com</code>, scope <code>sub</code>, filter <code>(objectClass=inetOrgPerson)</code>. The LDAP server scans every single entry in the subtree to evaluate the filter - computers, servers, service accounts, groups, OUs - before returning the few person accounts it is actually looking for. The fix is obvious once you measure the gap: restrict the baseDN to the OU that actually contains your users. To prove the waste, count how many entries the server touches today - every entry under the root - then compare mentally with the ~13 it would touch under <code>ou=People</code>.",
+    task: "Count every entry under dc=treedap,dc=com - the total cost of the current (too broad) search",
     baseDN: "dc=treedap,dc=com",
     scope: "sub",
     answerType: "number" as const,
     answerPrompt: "How many total entries exist under dc=treedap,dc=com (run filter (objectClass=*) with scope sub)?",
     hints: [
       "Use filter <code>(objectClass=*)</code> - this matches every entry in the directory regardless of type. Combined with baseDN <code>dc=treedap,dc=com</code> and scope <code>sub</code>, it tells you exactly how many entries the server must scan for any root-level query.",
-      "Then run the same filter from <code>ou=People,dc=treedap,dc=com</code>. Compare the two counts - the difference is the wasted work the server does on every login request.",
-      "The optimization is simply changing one config value: baseDN from <code>dc=treedap,dc=com</code> to <code>ou=People,dc=treedap,dc=com</code>. No code changes, no schema changes - just pointing the search at the right subtree."
+      "Mentally compare the count you get with what you would get from <code>ou=People,dc=treedap,dc=com</code> - roughly 13 entries (the OU itself, the Contractors sub-OU, and 11 person accounts). The difference is wasted work the server does on every login request.",
+      "The optimization is a single config value: baseDN from <code>dc=treedap,dc=com</code> to <code>ou=People,dc=treedap,dc=com</code>. No code changes, no schema changes - just pointing the search at the right subtree."
     ],
     validateAnswer(answer: string): ValidationResult {
       const n = parseInt(answer.trim(), 10);
-      if (n === 40) return { correct: true, feedback: "Correct. 40 entries total in the directory, but the app only needs the 13 entries under ou=People (the OU itself, the Contractors sub-OU, and 11 person accounts). Changing the baseDN reduces the scan by 67%. On a real directory with tens of thousands of entries the gain is proportionally larger - and on an unindexed attribute the difference between a targeted subtree search and a full tree scan can be the difference between milliseconds and seconds." };
+      if (n === 40) return { correct: true, feedback: "Correct. 40 entries total in the directory, but the app only needs the 13 entries under ou=People. Changing the baseDN reduces the scan by 67%. On a real directory with tens of thousands of entries the gain is proportionally larger - and on an unindexed attribute the difference between a targeted subtree search and a full tree scan can be the difference between milliseconds and seconds. You have finished every scenario - congratulations." };
       return { correct: false, feedback: "Run (objectClass=*) with scope sub from dc=treedap,dc=com and count every entry returned - OUs, users, groups, computers, services, everything." };
     }
   },

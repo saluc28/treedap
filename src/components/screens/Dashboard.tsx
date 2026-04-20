@@ -1,9 +1,11 @@
 import { LEVELS } from '../../data/levels';
 import { Badge } from '../ui/Badge';
+import { MobileWall } from '../MobileWall';
 
 interface DashboardProps {
   onSelectLevel: (id: number) => void;
   onBack: () => void;
+  onFreeMode: () => void;
   completedCount: number;
   totalStars: number;
   isUnlocked: (id: number) => boolean;
@@ -20,6 +22,7 @@ const OU_GROUPS = [
 export function Dashboard({
   onSelectLevel,
   onBack,
+  onFreeMode,
   completedCount,
   totalStars,
   isUnlocked,
@@ -33,21 +36,13 @@ export function Dashboard({
 
       <div className="db-grid-dots" />
 
-      {/* Mobile wall */}
-      <div className="mobile-wall">
-        <div className="mobile-wall-icon">🖥️</div>
-        <div className="mobile-wall-title">Best experienced on desktop</div>
-        <div className="mobile-wall-body">
-          TreeDap is a hands-on LDAP query trainer that needs a full keyboard and screen to work properly.
-        </div>
-        <div className="mobile-wall-hint">Open this page on a laptop or desktop to start the course.</div>
-      </div>
+      <MobileWall />
 
       {/* Header */}
       <header className="db-header">
         <div className="db-header-inner">
           <a className="db-logo" onClick={onBack}>
-            <span className="db-logo-icon">🌳</span>
+            <img src="/logo.svg" alt="" className="db-logo-icon" />
             <span className="db-logo-text">Tree<span className="db-logo-accent">Dap</span></span>
           </a>
           <div className="db-header-stats">
@@ -84,6 +79,14 @@ export function Dashboard({
             <div className="db-progress-fill" style={{ width: `${pct}%` }} />
           </div>
           <div className="db-progress-label">{pct}% complete</div>
+          <button className="db-free-mode-btn" onClick={onFreeMode}>
+            <span className="db-free-mode-icon">🧪</span>
+            <span className="db-free-mode-text">
+              <strong>Free Mode</strong>
+              <span>Open sandbox - write any filter against the full directory</span>
+            </span>
+            <span className="db-free-mode-arrow">→</span>
+          </button>
         </div>
 
         {/* Level groups */}

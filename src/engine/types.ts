@@ -64,9 +64,8 @@ export interface FilterLevel extends BaseLevelFields {
 }
 
 export interface InvestigativeLevel extends BaseLevelFields {
-  answerType: 'number' | 'boolean' | 'choice';
+  answerType: 'number' | 'boolean';
   answerPrompt: string;
-  answerOptions?: string[];
   validateAnswer: (answer: string) => ValidationResult;
 }
 

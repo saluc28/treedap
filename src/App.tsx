@@ -8,12 +8,13 @@ import { Landing } from './components/screens/Landing';
 // Each import() becomes its own chunk downloaded only when needed.
 const Dashboard       = lazy(() => import('./components/screens/Dashboard').then(m => ({ default: m.Dashboard })));
 const LevelScreen     = lazy(() => import('./components/level/LevelScreen').then(m => ({ default: m.LevelScreen })));
+const FreeMode        = lazy(() => import('./components/screens/FreeMode').then(m => ({ default: m.FreeMode })));
 const GlossaryModal   = lazy(() => import('./components/modals/GlossaryModal').then(m => ({ default: m.GlossaryModal })));
 const ConceptModal    = lazy(() => import('./components/modals/ConceptModal').then(m => ({ default: m.ConceptModal })));
 const CelebrationOverlay = lazy(() => import('./components/modals/CelebrationOverlay').then(m => ({ default: m.CelebrationOverlay })));
 
-// Tiny constant — avoids pulling levels.ts into the initial bundle
-const LEVEL_COUNT = 16;
+// Tiny constant - avoids pulling levels.ts into the initial bundle
+const LEVEL_COUNT = 17;
 
 // ── Preloader ────────────────────────────────────────────────────────────────
 // While the user reads the landing page we silently fetch the next chunks so
@@ -33,10 +34,13 @@ function AppInner() {
 
   return (
     <>
-      {/* Landing is eager — renders with zero JS overhead */}
+      {/* Landing is eager - renders with zero JS overhead */}
       {state.screen === 'landing' && (
         <>
-          <Landing onStart={() => dispatch({ type: 'SET_SCREEN', payload: 'dashboard' })} />
+          <Landing
+            onStart={() => dispatch({ type: 'ENTER_LEVEL', payload: 1 })}
+            onFreeMode={() => dispatch({ type: 'SET_SCREEN', payload: 'free-mode' })}
+          />
           <ChunkPreloader />
         </>
       )}
@@ -47,11 +51,18 @@ function AppInner() {
           <Dashboard
             onSelectLevel={(id) => dispatch({ type: 'ENTER_LEVEL', payload: id })}
             onBack={() => dispatch({ type: 'SET_SCREEN', payload: 'landing' })}
+            onFreeMode={() => dispatch({ type: 'SET_SCREEN', payload: 'free-mode' })}
             completedCount={progress.getCompletedCount()}
             totalStars={progress.getTotalStars()}
             isUnlocked={progress.isUnlocked}
             isCompleted={progress.isCompleted}
             getStars={progress.getStars}
+          />
+        )}
+
+        {state.screen === 'free-mode' && (
+          <FreeMode
+            onBack={() => dispatch({ type: 'SET_SCREEN', payload: 'dashboard' })}
           />
         )}
 
@@ -79,6 +90,8 @@ function AppInner() {
             stars={state.celebrationStars}
             levelId={state.currentLevelId!}
             isLastLevel={state.currentLevelId === LEVEL_COUNT}
+            totalStars={progress.getTotalStars()}
+            maxStars={LEVEL_COUNT * 3}
             onStayHere={() => dispatch({ type: 'CLOSE_CELEBRATION' })}
             onNext={() => {
               dispatch({ type: 'CLOSE_CELEBRATION' });

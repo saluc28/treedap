@@ -1,8 +1,16 @@
 {
-  "name": "react-app",
+  "name": "treedap",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "TreeDap - LDAP Troubleshooting Trainer. Interactive RFC 4515 filter scenarios.",
+  "author": "saluc28",
+  "license": "MIT",
+  "homepage": "https://treedap.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saluc28/treedap.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface CelebrationOverlayProps {
   stars: number;
   levelId: number;
   isLastLevel: boolean;
+  totalStars: number;
+  maxStars: number;
   onNext: () => void;
   onDashboard: () => void;
   onStayHere: () => void;
@@ -39,10 +41,27 @@ function launchConfetti() {
   }
 }
 
-export function CelebrationOverlay({ stars, levelId, isLastLevel, onNext, onDashboard, onStayHere }: CelebrationOverlayProps) {
+export function CelebrationOverlay({ stars, levelId, isLastLevel, totalStars, maxStars, onNext, onDashboard, onStayHere }: CelebrationOverlayProps) {
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     launchConfetti();
   }, []);
+
+  const shareText = `I just completed TreeDap - 17 real-world LDAP troubleshooting scenarios. ${totalStars}/${maxStars} stars ⭐`;
+  const shareUrl = 'https://treedap.com';
+  const twitterHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  const linkedinHref = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
 
   const starsArr = [1, 2, 3];
 
@@ -71,6 +90,27 @@ export function CelebrationOverlay({ stars, levelId, isLastLevel, onNext, onDash
             </span>
           ))}
         </div>
+        {isLastLevel && (
+          <div className="celebration-share">
+            <div className="celebration-share-title">
+              🏁 You finished every scenario - {totalStars}/{maxStars} stars
+            </div>
+            <div className="celebration-share-desc">
+              Share your run so other sysadmins can have a go:
+            </div>
+            <div className="celebration-share-actions">
+              <a className="btn btn-secondary btn-sm" href={twitterHref} target="_blank" rel="noopener noreferrer">
+                Post on X
+              </a>
+              <a className="btn btn-secondary btn-sm" href={linkedinHref} target="_blank" rel="noopener noreferrer">
+                Share on LinkedIn
+              </a>
+              <button className="btn btn-secondary btn-sm" onClick={handleCopy}>
+                {copied ? '✓ Copied' : 'Copy link'}
+              </button>
+            </div>
+          </div>
+        )}
         <div className="celebration-actions">
           <button className="btn btn-ghost" onClick={onStayHere}>
             Stay Here

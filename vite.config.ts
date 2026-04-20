@@ -36,7 +36,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
-          // React runtime in its own chunk — separately cacheable, never changes
+          // React runtime in its own chunk - separately cacheable, never changes
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'vendor';
           }

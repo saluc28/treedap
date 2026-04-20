@@ -1,6 +1,6 @@
 import type { LdapEntry, ValidationResult } from '../engine/types';
 
-export type Screen = 'landing' | 'dashboard' | 'level';
+export type Screen = 'landing' | 'dashboard' | 'level' | 'free-mode';
 
 export interface AppState {
   screen: Screen;
