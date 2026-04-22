@@ -5,13 +5,13 @@ An LDAP troubleshooting trainer that runs in your browser.
 
 Live at [treedap.com](https://treedap.com). No signup, no backend, everything runs client-side.
 
-> **Screenshot 1 (hero)**: a full-page shot of the landing at `treedap.com`. Show the title card, the "Diagnose Your First Incident" CTA, the code panel on the right, and the "17 Scenarios / Live Directory / 0 Signup" stats. Width ~1400px.
+![TreeDap landing page](docs/homepage.png)
 
 ## Why
 
-Most LDAP bugs don't raise errors. The bind returns "invalid credentials", the query returns zero entries, the app swallows it and logs `authentication failed`. There are a lot of distinct root causes hiding behind that one message, and the only way I ever learned to distinguish them was by hitting them live.
+Most LDAP issues don't necessarily throw an error. Typically the bind just returns "invalid credentials", the query returns no entries, the application silently fails and logs `authentication failed`. There are so many totally different causes behind that one message and the only way I ever learned to tell them apart was by experiencing them live.
 
-This project is the hands-on primer I wish I'd had. Every scenario is framed as a ticket, a Slack message, or an email from a teammate. You read the context, poke at the directory, and write a filter that proves the diagnosis. Hints are available but cost a star.
+This project is the step by step guide I wished for. Each use case is a message, a incident ticket or an email from a colleague. You get the context, explore the directory, and create the filter that matches the diagnosis. Hints are available but cost a star.
 
 ## What's in it
 
@@ -28,9 +28,9 @@ This project is the hands-on primer I wish I'd had. Every scenario is framed as 
 
 **Free Mode** for when you just want to poke the directory without objectives. Same tree, same filter engine, no stars.
 
-> **Screenshot 2 (level screen)**: a mid-scenario shot. Pick Level 5 "The Invisible Contractors" or Level 13 "The Flat Group Problem". Show the Jira/Teams context panel at the top, the directory tree on the left with some nodes highlighted as matches, the filter textarea with a real filter typed in, and the results panel. Width ~1400px.
+![Level 5 - The Invisible Contractors](docs/level5.png)
 
-> **Screenshot 3 (Free Mode)**: the Free Mode sandbox. Show the base DN / scope dropdowns, a filter in the textarea, the example chips row, and a few matched entries in the result list. Width ~1400px.
+![Free Mode sandbox](docs/freemode.png)
 
 ## Running locally
 
@@ -49,13 +49,13 @@ No environment variables, no database, no dependencies outside the lockfile.
 
 ## Tech choices
 
-React + TypeScript + Vite. React is aliased to `preact/compat` in `vite.config.ts` to cut the bundle size; it's a small app, there's no reason to ship 120kb of React runtime.
+React + TypeScript + Vite. React is aliased to `preact/compat` in `vite.config.ts` to cut the bundle size.
 
 The LDAP engine is hand-written. `src/engine/ldapParser.ts` is an RFC 4515 parser (AND / OR / NOT, presence, equality with `*` wildcards, comparison operators). `src/engine/ldapEngine.ts` walks the in-memory directory applying baseDN + scope + filter. Both files are short enough to read in one sitting. No `ldapjs` or similar, partly because it's fun, mostly because a real LDAP client would have brought Node-only deps into the browser bundle.
 
 Progress lives in `localStorage`. The only session state (current screen, current level) lives in `sessionStorage` so a page refresh doesn't kick you back to the landing.
 
-Directory data is in `src/data/directory.ts`. Fake Corp, ~40 entries, intentionally includes AD-style attributes (`sAMAccountName`, `primaryGroupID`) alongside OpenLDAP-style ones so the AD-specific scenarios are realistic.
+Directory data is in `src/data/directory.ts`. Fake Corp, around 85 entries, intentionally includes AD-style attributes (`sAMAccountName`, `primaryGroupID`) alongside OpenLDAP style ones so the AD-specific scenarios are realistic.
 
 ## Adding a scenario
 
@@ -70,7 +70,7 @@ Context copy lives in the same object. Keep it grounded in a ticket or a message
 
 ## Contributing
 
-PRs welcome. Useful areas:
+PRs welcome, useful areas:
 
 - more scenarios, especially around ACL / ACIs, replication lag, referrals
 - better AD coverage (`tokenGroups`, `userAccountControl` bit checks, though the engine would need extending)
@@ -81,8 +81,8 @@ Open an issue first if it's a large change so we don't end up working against ea
 
 ## License
 
-MIT. Do whatever you want with it. If you run an LDAP course or an onboarding session and this saves you a day of slide prep, that's the payoff.
+MIT. Do whatever you want with it.
 
 ## Credits
 
-Built by [@saluc28](https://github.com/saluc28). The scenarios are composites of real things I've broken, fixed, or watched someone else fix over the years. Any resemblance to an on-call you actually had is probably not a coincidence.
+Built by [@saluc28](https://github.com/saluc28). The scenarios are composites of real things I've broken, fixed, or watched someone else fix over the years.

@@ -1,14 +1,16 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useApp } from '../../store/AppContext';
 import { DIRECTORY } from '../../data/directory';
 import { LEVELS } from '../../data/levels';
 import { executeFilter } from '../../engine/ldapEngine';
+import { diagnose, type Diagnostic } from '../../engine/diagnostics';
 import type { FilterLevel, InvestigativeLevel, LdapEntry, LevelProgress, ValidationResult } from '../../engine/types';
 import { ObjectiveBar } from './ObjectiveBar';
 import { DirectoryTree } from './DirectoryTree';
 import { InlineConcept } from './InlineConcept';
 import { ResultEntry } from './ResultEntry';
+import { CopyLdapsearchButton } from './CopyLdapsearchButton';
 import { MobileWall } from '../MobileWall';
 
 interface UseProgressReturn {
@@ -52,6 +54,11 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
   }, [dispatch]);
 
   const isInvestigative = 'answerType' in level;
+  const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null);
+
+  useEffect(() => {
+    setDiagnostic(null);
+  }, [level.id]);
 
   const runQuery = useCallback(() => {
     const filter = state.queryInput.trim();
@@ -72,15 +79,28 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
     if (!state.queryResults || isInvestigative) return;
 
     dispatch({ type: 'INCREMENT_ATTEMPTS' });
-    const validation = (level as FilterLevel).validate(state.queryResults);
+    const filterLevel = level as FilterLevel;
+    const validation = filterLevel.validate(state.queryResults);
     dispatch({ type: 'SET_VALIDATION', payload: validation });
 
     if (validation.correct) {
+      setDiagnostic(null);
       const stars = computeStars(state.hintsUsed, state.attempts + 1);
       progress.save(level.id, { completed: true, stars, attempts: state.attempts + 1 });
       dispatch({ type: 'OPEN_CELEBRATION', payload: stars });
+    } else {
+      const d = diagnose({
+        filter: state.queryInput,
+        directory: DIRECTORY,
+        baseDN: level.baseDN,
+        scope: level.scope,
+        results: state.queryResults,
+        allResults: state.allQueryResults ?? [],
+        expectedCount: filterLevel.expectedDNs.length,
+      });
+      setDiagnostic(d);
     }
-  }, [state.queryResults, state.hintsUsed, state.attempts, level, isInvestigative, dispatch, progress]);
+  }, [state.queryResults, state.allQueryResults, state.queryInput, state.hintsUsed, state.attempts, level, isInvestigative, dispatch, progress]);
 
   const submitAnswer = useCallback(() => {
     if (!isInvestigative) return;
@@ -208,6 +228,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
                     >
                       ✕ Clear
                     </button>
+                    <CopyLdapsearchButton filter={state.queryInput} baseDN={level.baseDN} scope={level.scope} />
                     <button
                       className="btn btn-secondary btn-sm"
                       onClick={showNextHint}
@@ -234,6 +255,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
               isInvestigative={isInvestigative}
               levelBaseDN={level.baseDN}
               levelScope={level.scope}
+              diagnostic={diagnostic}
               onSubmit={submitFilter}
             />
 
@@ -291,6 +313,14 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
   );
 }
 
+function renderInlineCode(s: string): string {
+  const escaped = s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
 /* ---- Results Section ---- */
 
 interface ResultsSectionProps {
@@ -303,10 +333,11 @@ interface ResultsSectionProps {
   isInvestigative: boolean;
   levelBaseDN: string;
   levelScope: string;
+  diagnostic: Diagnostic | null;
   onSubmit: () => void;
 }
 
-function ResultsSection({ queryResults, allQueryResults, validationResult, parseError, currentHintIndex, hints, isInvestigative, levelBaseDN, levelScope, onSubmit }: ResultsSectionProps) {
+function ResultsSection({ queryResults, allQueryResults, validationResult, parseError, currentHintIndex, hints, isInvestigative, levelBaseDN, levelScope, diagnostic, onSubmit }: ResultsSectionProps) {
   if (!queryResults && !parseError && currentHintIndex < 0) {
     return (
       <div className="results-section">
@@ -352,6 +383,14 @@ function ResultsSection({ queryResults, allQueryResults, validationResult, parse
             </div>
             <div className="verdict-detail">{validationResult.feedback}</div>
           </div>
+        </div>
+      )}
+
+      {/* Diagnostic (free, not a hint) */}
+      {diagnostic && validationResult && !validationResult.correct && (
+        <div className="diagnostic-panel">
+          <span className="diagnostic-icon">🔍</span>
+          <div className="diagnostic-text" dangerouslySetInnerHTML={{ __html: renderInlineCode(diagnostic.message) }} />
         </div>
       )}
 

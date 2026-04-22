@@ -427,7 +427,7 @@ export const LEVELS: Level[] = [
       avatarColor: '#c43e1c',
       timestamp: 'Today 14:22',
     },
-    context: "Hi, I still can't access the engineering portal. My manager told me I should have access because I'm in the engineering group via the backend team. The access control reads the groups that list Frank directly and denies if engineering is not among them. Standard LDAP search does not follow nested group membership: <code>cn=team-backend</code> is listed as a member of <code>cn=engineering</code>, and Frank is a member of <code>cn=team-backend</code> - but that chain is invisible to a flat <code>member</code> check. To prove the problem, enumerate exactly the groups that list Frank's DN directly. If <code>cn=engineering</code> is not in that list, the app will always deny him.",
+    context: "Hi, I still can't access the engineering portal. My manager told me I should have access because I'm in the engineering group via the backend team. The access control reads the groups that list Frank directly and denies if engineering is not among them. Standard LDAP search does not follow nested group membership: the chain here is four levels deep - <code>cn=all-staff</code> contains <code>cn=engineering</code>, <code>cn=engineering</code> contains <code>cn=team-backend</code>, and Frank is a member of <code>cn=team-backend</code> - but the entire chain is invisible to a flat <code>member</code> check. To prove the problem, enumerate exactly the groups that list Frank's DN directly. If <code>cn=engineering</code> is not in that list, the app will always deny him.",
     task: "List every group that has Frank Miller's DN as a direct member (no nesting)",
     baseDN: "ou=Groups,dc=treedap,dc=com",
     scope: "sub",
@@ -564,7 +564,7 @@ export const LEVELS: Level[] = [
       ticketTitle: 'Login latency spike under load - LDAP search timeout',
       reporter: 'APM Alert (automated)',
     },
-    context: "Under load, user login takes 6-8 seconds and occasionally times out. Profiling shows the bottleneck is the LDAP search. The app uses <code>baseDN=dc=treedap,dc=com</code>, scope <code>sub</code>, filter <code>(objectClass=inetOrgPerson)</code>. The LDAP server scans every single entry in the subtree to evaluate the filter - computers, servers, service accounts, groups, OUs - before returning the few person accounts it is actually looking for. The fix is obvious once you measure the gap: restrict the baseDN to the OU that actually contains your users. To prove the waste, count how many entries the server touches today - every entry under the root - then compare mentally with the ~13 it would touch under <code>ou=People</code>.",
+    context: "Under load, user login takes 6-8 seconds and occasionally times out. Profiling shows the bottleneck is the LDAP search. The app uses <code>baseDN=dc=treedap,dc=com</code>, scope <code>sub</code>, filter <code>(objectClass=inetOrgPerson)</code>. The LDAP server scans every single entry in the subtree to evaluate the filter - computers, servers, printers, network devices, service accounts, groups, project teams, OUs - before returning the few person accounts it is actually looking for. The fix is obvious once you measure the gap: restrict the baseDN to the OU that actually contains your users. To prove the waste, count how many entries the server touches today - every entry under the root - then compare mentally with the ~13 it would touch under <code>ou=People</code>.",
     task: "Count every entry under dc=treedap,dc=com - the total cost of the current (too broad) search",
     baseDN: "dc=treedap,dc=com",
     scope: "sub",
@@ -572,13 +572,13 @@ export const LEVELS: Level[] = [
     answerPrompt: "How many total entries exist under dc=treedap,dc=com (run filter (objectClass=*) with scope sub)?",
     hints: [
       "Use filter <code>(objectClass=*)</code> - this matches every entry in the directory regardless of type. Combined with baseDN <code>dc=treedap,dc=com</code> and scope <code>sub</code>, it tells you exactly how many entries the server must scan for any root-level query.",
-      "Mentally compare the count you get with what you would get from <code>ou=People,dc=treedap,dc=com</code> - roughly 13 entries (the OU itself, the Contractors sub-OU, and 11 person accounts). The difference is wasted work the server does on every login request.",
+      "Mentally compare the count you get with what you would get from <code>ou=People,dc=treedap,dc=com</code> - roughly 13 entries (the OU itself, the Contractors sub-OU, and 11 person accounts). Everything else - workstations, servers, printers, switches, groups, projects, service accounts - is wasted work the server repeats on every login request.",
       "The optimization is a single config value: baseDN from <code>dc=treedap,dc=com</code> to <code>ou=People,dc=treedap,dc=com</code>. No code changes, no schema changes - just pointing the search at the right subtree."
     ],
     validateAnswer(answer: string): ValidationResult {
       const n = parseInt(answer.trim(), 10);
-      if (n === 40) return { correct: true, feedback: "Correct. 40 entries total in the directory, but the app only needs the 13 entries under ou=People. Changing the baseDN reduces the scan by 67%. On a real directory with tens of thousands of entries the gain is proportionally larger - and on an unindexed attribute the difference between a targeted subtree search and a full tree scan can be the difference between milliseconds and seconds. You have finished every scenario - congratulations." };
-      return { correct: false, feedback: "Run (objectClass=*) with scope sub from dc=treedap,dc=com and count every entry returned - OUs, users, groups, computers, services, everything." };
+      if (n === 85) return { correct: true, feedback: "Correct. 85 entries total in the directory, but the app only needs the 13 entries under ou=People - around 15%. The rest is pure overhead the server walks on every single login. Changing the baseDN reduces the scan by 85%. On a real directory with tens of thousands of entries the gain is proportionally larger - and on an unindexed attribute the difference between a targeted subtree search and a full tree scan can be the difference between milliseconds and seconds. You have finished every scenario - congratulations." };
+      return { correct: false, feedback: "Run (objectClass=*) with scope sub from dc=treedap,dc=com and count every entry returned - OUs, users, groups, computers, servers, printers, switches, service accounts, everything." };
     }
   },
 

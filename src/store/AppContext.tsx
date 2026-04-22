@@ -1,7 +1,8 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { AppState, Action } from './types';
 import { reducer, initialState } from './reducer';
+import { parsePath, routeToPath } from './routing';
 
 interface AppContextValue {
   state: AppState;
@@ -10,40 +11,45 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-const SESSION_KEY = 'treedap_nav';
-
 function loadInitialState(): AppState {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return initialState;
-    const { screen, currentLevelId } = JSON.parse(raw);
-    if (screen === 'dashboard' || screen === 'free-mode' || (screen === 'level' && currentLevelId != null)) {
-      return { ...initialState, screen, currentLevelId };
-    }
-  } catch {
-    // ignore parse errors
-  }
-  return initialState;
+  const route = parsePath();
+  return { ...initialState, screen: route.screen, currentLevelId: route.currentLevelId };
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, loadInitialState);
+  const lastWrittenPath = useRef<string>(routeToPath(state.screen, state.currentLevelId));
 
-  // Remove the hide-shell class injected by the inline script in index.html
   useEffect(() => {
     document.documentElement.classList.remove('hide-shell');
   }, []);
 
+  // Sync state → URL.
   useEffect(() => {
-    if (state.screen === 'landing') {
-      sessionStorage.removeItem(SESSION_KEY);
-    } else {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-        screen: state.screen,
-        currentLevelId: state.currentLevelId,
-      }));
+    const target = routeToPath(state.screen, state.currentLevelId);
+    if (target !== window.location.pathname && target !== lastWrittenPath.current) {
+      lastWrittenPath.current = target;
+      window.history.pushState(null, '', target);
+    } else if (target !== window.location.pathname) {
+      // Initial sync after mount.
+      window.history.replaceState(null, '', target);
     }
   }, [state.screen, state.currentLevelId]);
+
+  // Sync URL → state (back/forward, external navigation).
+  useEffect(() => {
+    function onPopState() {
+      const route = parsePath();
+      lastWrittenPath.current = routeToPath(route.screen, route.currentLevelId);
+      if (route.screen === 'level' && route.currentLevelId != null) {
+        dispatch({ type: 'ENTER_LEVEL', payload: route.currentLevelId });
+      } else {
+        dispatch({ type: 'SET_SCREEN', payload: route.screen });
+      }
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

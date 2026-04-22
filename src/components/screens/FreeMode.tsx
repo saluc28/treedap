@@ -5,6 +5,7 @@ import { executeFilter } from '../../engine/ldapEngine';
 import type { LdapEntry, LdapScope } from '../../engine/types';
 import { DirectoryTree } from '../level/DirectoryTree';
 import { ResultEntry } from '../level/ResultEntry';
+import { CopyLdapsearchButton } from '../level/CopyLdapsearchButton';
 import { MobileWall } from '../MobileWall';
 import { useApp } from '../../store/AppContext';
 
@@ -188,6 +189,7 @@ export function FreeMode({ onBack }: FreeModeProps) {
                     <button className="btn btn-ghost btn-sm" onClick={() => setFilter('')}>
                       ✕ Clear
                     </button>
+                    <CopyLdapsearchButton filter={filter} baseDN={baseDN} scope={scope} />
                     <button className="btn btn-primary btn-sm" onClick={runQuery}>
                       ▶ Run Query
                     </button>
