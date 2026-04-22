@@ -4,7 +4,9 @@ import { DIRECTORY } from '../../data/directory';
 import { executeFilter } from '../../engine/ldapEngine';
 import type { LdapEntry, LdapScope } from '../../engine/types';
 import { DirectoryTree } from '../level/DirectoryTree';
+import { ResultEntry } from '../level/ResultEntry';
 import { MobileWall } from '../MobileWall';
+import { useApp } from '../../store/AppContext';
 
 interface FreeModeProps {
   onBack: () => void;
@@ -31,6 +33,7 @@ const EXAMPLES: { label: string; filter: string }[] = [
 ];
 
 export function FreeMode({ onBack }: FreeModeProps) {
+  const { dispatch } = useApp();
   const [filter, setFilter] = useState<string>('(objectClass=inetOrgPerson)');
   const [baseDN, setBaseDN] = useState<string>('dc=treedap,dc=com');
   const [scope, setScope] = useState<LdapScope>('sub');
@@ -107,6 +110,14 @@ export function FreeMode({ onBack }: FreeModeProps) {
               Directory sandbox - no objectives, no stars
             </div>
           </div>
+        </div>
+        <div className="level-header-right">
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => dispatch({ type: 'OPEN_GLOSSARY' })}
+          >
+            📖 Glossary
+          </button>
         </div>
       </header>
 
@@ -204,41 +215,43 @@ export function FreeMode({ onBack }: FreeModeProps) {
 
             {/* Results */}
             <div className="results-section">
-              <div className="panel-header">
-                <span>Results</span>
-                {results != null && (
-                  <span className="text-secondary" style={{ fontSize: '12px' }}>
-                    {results.length} {results.length === 1 ? 'entry' : 'entries'}
-                  </span>
-                )}
-              </div>
-
               {parseError && (
-                <div className="feedback feedback-error">
-                  <strong>Parse error:</strong> {parseError}
+                <div className="result-verdict syntax-error">
+                  <span className="verdict-emoji">⚠️</span>
+                  <div className="verdict-text">
+                    <div className="verdict-title syntax-error">Syntax Error</div>
+                    <div className="verdict-detail">{parseError}</div>
+                  </div>
                 </div>
               )}
 
               {!parseError && results == null && (
-                <div className="fm-empty">Run a filter to see matching entries here.</div>
+                <div className="results-empty">
+                  <div className="results-empty-icon">🔎</div>
+                  <div className="results-empty-text">Run a filter to explore the directory</div>
+                  <div className="results-empty-sub">Type an LDAP filter above and click Run Query, or pick an example</div>
+                </div>
               )}
 
               {!parseError && results != null && results.length === 0 && (
-                <div className="fm-empty">No entries match this filter under the chosen baseDN and scope.</div>
+                <div className="results-empty">
+                  <div className="results-empty-icon">🫥</div>
+                  <div className="results-empty-text">No entries match</div>
+                  <div className="results-empty-sub">Nothing under <code>{baseDN}</code> with scope <code>{scope}</code> satisfies this filter</div>
+                </div>
               )}
 
               {!parseError && results != null && results.length > 0 && (
-                <ul className="fm-result-list">
-                  {results.map(e => (
-                    <li
-                      key={e.dn}
-                      className={`fm-result-item${selectedDn?.toLowerCase() === e.dn.toLowerCase() ? ' selected' : ''}`}
-                      onClick={() => setSelectedDn(e.dn)}
-                    >
-                      {e.dn}
-                    </li>
+                <>
+                  <div className="results-header">
+                    <span className="results-count">
+                      <span className="num">{results.length}</span> {results.length === 1 ? 'result' : 'results'} found
+                    </span>
+                  </div>
+                  {results.map((entry) => (
+                    <ResultEntry key={entry.dn} entry={entry} />
                   ))}
-                </ul>
+                </>
               )}
             </div>
           </div>

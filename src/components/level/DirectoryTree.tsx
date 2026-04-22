@@ -23,12 +23,12 @@ interface TreeMap {
 
 function getNodeIcon(dn: string): string {
   const dnL = dn.toLowerCase();
-  if (dnL === 'dc=acme,dc=com') return '🏢';
   if (dnL.startsWith('dc=')) return '🏢';
   if (dnL.startsWith('ou=')) return '📁';
   if (dnL.startsWith('uid=')) return '👤';
   if (dnL.startsWith('cn=') && dnL.includes('ou=groups')) return '👥';
   if (dnL.startsWith('cn=') && dnL.includes('ou=services')) return '⚙️';
+  if (dnL.includes('ou=computers')) return '🖥️';
   return '📄';
 }
 
