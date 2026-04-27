@@ -28,7 +28,13 @@ function getNodeIcon(dn: string): string {
   if (dnL.startsWith('uid=')) return '👤';
   if (dnL.startsWith('cn=') && dnL.includes('ou=groups')) return '👥';
   if (dnL.startsWith('cn=') && dnL.includes('ou=services')) return '⚙️';
-  if (dnL.includes('ou=computers')) return '🖥️';
+  if (dnL.includes('ou=computers')) {
+    if (dnL.startsWith('cn=ws-')) return '💻';
+    if (dnL.startsWith('cn=srv-')) return '🖥️';
+    if (dnL.startsWith('cn=prn-')) return '🖨️';
+    if (dnL.startsWith('cn=rtr-') || dnL.startsWith('cn=sw-') || dnL.startsWith('cn=fw-') || dnL.startsWith('cn=ap-')) return '🌐';
+    return '🖥️';
+  }
   return '📄';
 }
 

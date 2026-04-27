@@ -181,7 +181,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
       <main className="level-body">
         <InlineConcept levelId={level.id} />
 
-        <ObjectiveBar context={level.context} task={level.task} contextType={level.contextType} contextMeta={level.contextMeta} />
+        <ObjectiveBar context={level.context} task={level.task} contextType={level.contextType} contextMeta={level.contextMeta} flavor={level.flavor} />
 
         <div className="level-workspace">
           {/* Left: Directory Tree */}
@@ -256,6 +256,8 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
               levelBaseDN={level.baseDN}
               levelScope={level.scope}
               diagnostic={diagnostic}
+              solution={(level as FilterLevel).solution}
+              insight={level.insight}
               onSubmit={submitFilter}
             />
 
@@ -265,6 +267,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
                 level={level as InvestigativeLevel}
                 answerInput={state.answerInput}
                 answerResult={state.answerResult}
+                insight={level.insight}
                 onAnswerChange={(v) => dispatch({ type: 'SET_ANSWER_INPUT', payload: v })}
                 onSubmit={submitAnswer}
               />
@@ -334,10 +337,12 @@ interface ResultsSectionProps {
   levelBaseDN: string;
   levelScope: string;
   diagnostic: Diagnostic | null;
+  solution?: string;
+  insight?: string;
   onSubmit: () => void;
 }
 
-function ResultsSection({ queryResults, allQueryResults, validationResult, parseError, currentHintIndex, hints, isInvestigative, levelBaseDN, levelScope, diagnostic, onSubmit }: ResultsSectionProps) {
+function ResultsSection({ queryResults, allQueryResults, validationResult, parseError, currentHintIndex, hints, isInvestigative, levelBaseDN, levelScope, diagnostic, solution, insight, onSubmit }: ResultsSectionProps) {
   if (!queryResults && !parseError && currentHintIndex < 0) {
     return (
       <div className="results-section">
@@ -383,6 +388,25 @@ function ResultsSection({ queryResults, allQueryResults, validationResult, parse
             </div>
             <div className="verdict-detail">{validationResult.feedback}</div>
           </div>
+        </div>
+      )}
+
+      {/* Solution + Insight panel (only on correct) */}
+      {validationResult?.correct && (solution || insight) && (
+        <div className="solution-panel">
+          <div className="solution-panel-head">
+            <span className="solution-panel-icon">🎓</span>
+            <span className="solution-panel-title">Why this works</span>
+          </div>
+          {solution && (
+            <div className="solution-panel-filter">
+              <span className="solution-panel-filter-label">Canonical filter</span>
+              <code className="solution-panel-filter-code">{solution}</code>
+            </div>
+          )}
+          {insight && (
+            <div className="solution-panel-insight" dangerouslySetInnerHTML={{ __html: insight }} />
+          )}
         </div>
       )}
 
@@ -456,11 +480,12 @@ interface AnswerSectionProps {
   level: InvestigativeLevel;
   answerInput: string;
   answerResult: ValidationResult | null;
+  insight?: string;
   onAnswerChange: (v: string) => void;
   onSubmit: () => void;
 }
 
-function AnswerSection({ level, answerInput, answerResult, onAnswerChange, onSubmit }: AnswerSectionProps) {
+function AnswerSection({ level, answerInput, answerResult, insight, onAnswerChange, onSubmit }: AnswerSectionProps) {
   const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') onSubmit();
   };
@@ -512,6 +537,15 @@ function AnswerSection({ level, answerInput, answerResult, onAnswerChange, onSub
             </div>
             <div className="verdict-detail">{answerResult.feedback}</div>
           </div>
+        </div>
+      )}
+      {answerResult?.correct && insight && (
+        <div className="solution-panel">
+          <div className="solution-panel-head">
+            <span className="solution-panel-icon">🎓</span>
+            <span className="solution-panel-title">Why this matters</span>
+          </div>
+          <div className="solution-panel-insight" dangerouslySetInnerHTML={{ __html: insight }} />
         </div>
       )}
     </div>

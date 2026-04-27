@@ -44,6 +44,8 @@ export interface EmailContextMeta {
 
 export type ContextMeta = TeamsContextMeta | JiraContextMeta | EmailContextMeta;
 
+export type LdapFlavor = 'ad' | 'openldap' | 'both';
+
 interface BaseLevelFields {
   id: number;
   title: string;
@@ -55,11 +57,14 @@ interface BaseLevelFields {
   baseDN: string;
   scope: LdapScope;
   hints: string[];
+  flavor?: LdapFlavor;
+  insight?: string;
 }
 
 export interface FilterLevel extends BaseLevelFields {
   answerType?: never;
   expectedDNs: string[];
+  solution?: string;
   validate: (result: LdapEntry[]) => ValidationResult;
 }
 

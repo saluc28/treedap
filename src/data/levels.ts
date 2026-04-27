@@ -72,6 +72,9 @@ export const LEVELS: Level[] = [
       "Containers in LDAP are entries of type <code>organizationalUnit</code>. Your filter is <code>(objectClass=organizationalUnit)</code>. The scope is already set to <code>one</code> which means 'only direct children of the baseDN' - exactly what you want.",
       "Type <code>(objectClass=organizationalUnit)</code> in the filter bar and press Run. You should get four results - People, Groups, Services, Computers. These are the top-level containers of the directory. Every entry you will work with in later levels lives inside one of them."
     ],
+    flavor: "both" as const,
+    solution: "(objectClass=organizationalUnit)",
+    insight: "<code>objectClass</code> is the universal type tag - every entry has one, so it's the first filter to try when you need 'show me all the X'.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(objectClass=organizationalUnit)');
     }
@@ -103,6 +106,9 @@ export const LEVELS: Level[] = [
       "The filter syntax is always <code>(attributeName=value)</code> with parentheses. Attribute names are case-insensitive. Try: <code>(objectClass=inetOrgPerson)</code>.",
       "Scope is already set to <code>sub</code> which means the search descends into every sub-OU. You should get back all person accounts regardless of where they sit in the tree."
     ],
+    flavor: "openldap" as const,
+    solution: "(objectClass=inetOrgPerson)",
+    insight: "<code>inetOrgPerson</code> is the OpenLDAP class for human accounts. AD uses <code>(objectClass=user)</code> instead - same concept, different schema label. Picking the wrong one is one of the most common cross-platform mistakes.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(objectClass=inetOrgPerson)');
     }
@@ -121,7 +127,7 @@ export const LEVELS: Level[] = [
       ticketTitle: 'Quarterly inventory - list every employee workstation',
       reporter: 'Sofia Russo (IT Asset Management)',
     },
-    context: "IT Asset Management needs a list of every employee workstation for the quarterly audit. The directory stores all computers under <code>ou=Computers</code>, split between workstations and servers. By convention, workstation entries are named with a <code>ws-</code> prefix (e.g. <code>cn=ws-alice</code>), while servers use <code>srv-</code>. Both are stored as <code>objectClass=device</code> - so filtering on objectClass alone would give you servers too. You need to combine two conditions: the objectClass and a pattern match on the cn. LDAP supports wildcards in equality filters: <code>(cn=ws-*)</code> matches any entry whose cn starts with <code>ws-</code>.",
+    context: "IT Asset Management needs a list of every employee workstation for the quarterly audit. The directory stores all hardware under <code>ou=Computers</code>: workstations, servers, printers, and network gear (routers, switches, firewalls, access points). By convention, workstation entries are named with a <code>ws-</code> prefix (e.g. <code>cn=ws-alice</code>), servers use <code>srv-</code>, printers <code>prn-</code>, network devices <code>rtr-/sw-/fw-/ap-</code>. They are all stored as <code>objectClass=device</code> - so filtering on objectClass alone would give you every piece of hardware in the company. You need to combine two conditions: the objectClass and a pattern match on the cn. LDAP supports wildcards in equality filters: <code>(cn=ws-*)</code> matches any entry whose cn starts with <code>ws-</code>.",
     task: "Find every employee workstation in the directory (cn starts with ws-, objectClass is device)",
     baseDN: "ou=Computers,dc=treedap,dc=com",
     scope: "sub",
@@ -135,9 +141,12 @@ export const LEVELS: Level[] = [
     ],
     hints: [
       "You need two conditions combined with AND: <code>(&(condition1)(condition2))</code>. One condition fixes the objectClass, the other matches the naming pattern.",
-      "The wildcard <code>*</code> matches any sequence of characters inside an equality filter. <code>(cn=ws-*)</code> matches every cn beginning with <code>ws-</code> - it will exclude all the <code>srv-*</code> entries.",
-      "Try: <code>(&(objectClass=device)(cn=ws-*))</code>. This returns the six workstations and nothing else - no servers, no OU containers, no unrelated entries."
+      "The wildcard <code>*</code> matches any sequence of characters inside an equality filter. <code>(cn=ws-*)</code> matches every cn beginning with <code>ws-</code> - it will exclude servers, printers, and network gear.",
+      "Try: <code>(&(objectClass=device)(cn=ws-*))</code>. This returns the six workstations and nothing else - no servers, no printers, no switches, no OU containers."
     ],
+    flavor: "both" as const,
+    solution: "(&(objectClass=device)(cn=ws-*))",
+    insight: "Wildcards on <code>cn</code> let you slice hardware by naming convention without a dedicated attribute. Always combine with <code>objectClass</code> so you don't catch OU containers with names starting the same way.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(&(objectClass=device)(cn=ws-*))');
     }
@@ -169,6 +178,8 @@ export const LEVELS: Level[] = [
       "Use <code>(objectClass=inetOrgPerson)</code> and count the results. The Services OU contains only service accounts with a different objectClass.",
       "Zero results from a valid filter is the clearest possible sign of a wrong baseDN. The filter is correct, the accounts exist - they are just unreachable from this starting point."
     ],
+    flavor: "both" as const,
+    insight: "baseDN is scoped, not absolute. If your data lives in a sibling branch, the server finds nothing and returns no error - just an empty result set, which callers often misread as 'user not registered'.",
     validateAnswer(answer: string): ValidationResult {
       const n = parseInt(answer.trim(), 10);
       if (n === 0) return { correct: true, feedback: "Correct. Zero person accounts are reachable from ou=Services because that OU contains only service accounts (objectClass=account). The LDAP server obeys the baseDN strictly - it never searches outside it. The fix is to restore baseDN to ou=People,dc=treedap,dc=com." };
@@ -202,6 +213,9 @@ export const LEVELS: Level[] = [
       "Contractor accounts have <code>title=Contractor</code>. Combine that with <code>objectClass=inetOrgPerson</code> using an AND operator: <code>(&(condition1)(condition2))</code>.",
       "Try: <code>(&(objectClass=inetOrgPerson)(title=Contractor))</code>. This returns only the accounts the app cannot see - the ones sitting inside the sub-OU that scope=one never reaches."
     ],
+    flavor: "both" as const,
+    solution: "(&(objectClass=inetOrgPerson)(title=Contractor))",
+    insight: "Attributes like <code>title</code> or <code>department</code> are often more reliable than DN location. Contractors may sit in sub-OUs or alongside employees - filter on the attribute, not on where they live.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(title=Contractor))');
     }
@@ -230,6 +244,8 @@ export const LEVELS: Level[] = [
       "Try <code>(cn=ldap-svc)</code>. Zero results means the entry is not a direct child of the root. Then search the full tree with scope <code>sub</code> to confirm where it actually lives now.",
       "The entry exists - just not where the app expects it. Scope <code>one</code> from the root shows only the top-level OUs. The service account moved to <code>ou=Services</code>, making its new DN <code>cn=ldap-svc,ou=Services,dc=treedap,dc=com</code>."
     ],
+    flavor: "both" as const,
+    insight: "A DN is both ID and address. Moving an entry across OUs keeps the data but breaks every config that references the old DN - silently, because the directory just returns 'not found'.",
     validateAnswer(answer: string): ValidationResult {
       if (answer === 'No') return { correct: true, feedback: "Correct. cn=ldap-svc does not exist as a direct child of dc=treedap,dc=com. After the move, its DN is cn=ldap-svc,ou=Services,dc=treedap,dc=com. The app config must be updated to use this new DN. This is a common post-migration failure: the account is intact but unreachable at the configured address." };
       return { correct: false, feedback: "Run (cn=ldap-svc) with scope one from dc=treedap,dc=com and count the results. A DN is a precise address - if the entry moved, the old address is gone." };
@@ -258,6 +274,9 @@ export const LEVELS: Level[] = [
       "In inetOrgPerson schema, <code>cn</code> is the common name (display name). The login attribute is <code>uid</code> - it stores the short username. These two attributes serve different purposes and almost never have the same value.",
       "Try: <code>(uid=alice.smith)</code>. The SSO library's filter attribute needs to be changed from <code>cn</code> to <code>uid</code> in its configuration."
     ],
+    flavor: "openldap" as const,
+    solution: "(uid=alice.smith)",
+    insight: "<code>uid</code> is the OpenLDAP login attribute. AD doesn't populate it by default - AD logins use <code>sAMAccountName</code>. A config pointing at the wrong one returns zero matches even when the user obviously exists.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(uid=alice.smith)');
     }
@@ -285,6 +304,9 @@ export const LEVELS: Level[] = [
       "In AD environments, <code>sAMAccountName</code> is the login attribute - the equivalent of <code>uid</code> in OpenLDAP. When an app migrates from pure OpenLDAP to AD-synced LDAP, changing the filter attribute from <code>uid</code> to <code>sAMAccountName</code> is almost always required.",
       "Try: <code>(sAMAccountName=alice.smith)</code>. The app's config needs a single value change: the filter template goes from <code>(uid=%s)</code> to <code>(sAMAccountName=%s)</code>."
     ],
+    flavor: "ad" as const,
+    solution: "(sAMAccountName=alice.smith)",
+    insight: "<code>sAMAccountName</code> is the AD-specific login attribute, required for domain logins and capped at 20 characters. Pure OpenLDAP deployments don't populate it - so apps written for AD break when pointed at an LDAP server using <code>uid</code>.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(sAMAccountName=alice.smith)');
     }
@@ -320,6 +342,9 @@ export const LEVELS: Level[] = [
       "The NOT operator wraps a single filter: <code>(!(manager=*))</code> matches entries where manager is absent. Combine it with objectClass using AND.",
       "Try: <code>(&(objectClass=inetOrgPerson)(!(manager=*)))</code>. Each result is an account the org chart widget will silently skip."
     ],
+    flavor: "both" as const,
+    solution: "(&(objectClass=inetOrgPerson)(!(manager=*)))",
+    insight: "<code>!(attr=*)</code> negates a presence check - it finds entries where the attribute is <em>absent</em>. This is the standard idiom for auditing incomplete records, and it works identically on AD and OpenLDAP.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(!(manager=*)))');
     }
@@ -352,6 +377,9 @@ export const LEVELS: Level[] = [
       "The lockout attribute is <code>pwdAccountLockedTime</code>. An entry either has it (locked) or does not (not locked). Its exact value - a GeneralizedTime string - is irrelevant for the audit.",
       "Try: <code>(&(objectClass=inetOrgPerson)(pwdAccountLockedTime=*))</code>. Every result is an account the app's <code>active=TRUE</code> check would wrongly let through - the directory will still refuse every bind."
     ],
+    flavor: "openldap" as const,
+    solution: "(&(objectClass=inetOrgPerson)(pwdAccountLockedTime=*))",
+    insight: "<code>pwdAccountLockedTime</code> is set by the OpenLDAP <code>ppolicy</code> overlay when a lockout triggers - its mere presence means 'locked'. AD uses <code>lockoutTime</code> instead, and you test for a non-zero value.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(pwdAccountLockedTime=*))');
     }
@@ -380,6 +408,8 @@ export const LEVELS: Level[] = [
       "The <code>pwdChangedTime</code> attribute records when the password was last changed, in GeneralizedTime format (YYYYMMDDHHmmssZ). If the gap between that date and today exceeds the policy's maximum password age, the password is expired.",
       "Grace's <code>pwdChangedTime</code> is set to January 2023 - over 14 months ago. With a standard 365-day policy, the password expired in January 2024 and every bind attempt has been failing at the server level since then."
     ],
+    flavor: "openldap" as const,
+    insight: "Password expiry and lockout are distinct failure modes with distinct error codes (773 vs 775), but most apps collapse them into one 'invalid credentials' message - hiding the actual remediation path from the user.",
     validateAnswer(answer: string): ValidationResult {
       if (answer === 'Yes') return { correct: true, feedback: "Correct. Grace's pwdChangedTime is set to 20230101120000Z - January 2023. With a 365-day password policy, her password expired in January 2024. The app receives LDAP error 49 sub-code 773 (password expired) but surfaces it as 'invalid credentials', giving Grace no actionable feedback. The fix: handle error 773 explicitly and prompt the user to change their password, rather than showing a generic login failure." };
       return { correct: false, feedback: "Run (uid=grace.lee) and read every attribute. There is one that tells you when her password was last changed - and how long ago that was." };
@@ -409,6 +439,8 @@ export const LEVELS: Level[] = [
       "The <code>shadowExpire</code> attribute stores an expiry date as days since the Unix epoch. Its presence alone indicates that an expiry policy is in effect on this account.",
       "Try: <code>(&(cn=ldap-svc)(shadowExpire=*))</code>. If this returns the entry, the expiry attribute is set."
     ],
+    flavor: "openldap" as const,
+    insight: "Service accounts fail silently: no user is watching them and expiry attributes like <code>shadowExpire</code> get copied over from user templates without anyone noticing. Always strip expiry policies from service accounts or monitor them explicitly.",
     validateAnswer(answer: string): ValidationResult {
       if (answer === 'Yes') return { correct: true, feedback: "Correct. ldap-svc has shadowExpire set to 19754 (days since epoch), which corresponds to early 2024 - the account has been expired for months. Every bind attempt fails at the server level before any application logic runs. The fix: reset the service account credentials and either remove shadowExpire or set it to a future date. Best practice: give service accounts non-expiring passwords and monitor them via a secrets manager rather than relying on LDAP shadow attributes." };
       return { correct: false, feedback: "Look again. Run (cn=ldap-svc) and read every attribute in the result. There is one that indicates an expiry policy is set on this account." };
@@ -440,6 +472,9 @@ export const LEVELS: Level[] = [
       "Frank's DN is <code>uid=frank.miller,ou=People,dc=treedap,dc=com</code>. Groups use <code>objectClass=groupOfNames</code>. The filter is <code>(&(objectClass=groupOfNames)(member=uid=frank.miller,ou=People,dc=treedap,dc=com))</code>.",
       "You will get two results - <code>hr-team</code> and <code>team-backend</code>. Crucially, <code>engineering</code> is NOT among them, even though team-backend is nested inside it. Standard LDAP has no recursive memberOf expansion: the app must resolve nesting itself or the directory must run the memberOf overlay."
     ],
+    flavor: "openldap" as const,
+    solution: "(&(objectClass=groupOfNames)(member=uid=frank.miller,ou=People,dc=treedap,dc=com))",
+    insight: "LDAP <code>member</code> is flat - only DIRECT memberships count. Nested groups (group-of-groups) are invisible to a flat member filter. AD solves this with <code>LDAP_MATCHING_RULE_IN_CHAIN</code>; OpenLDAP needs the <code>memberof</code> overlay or a client-side walk.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(&(objectClass=groupOfNames)(member=uid=frank.miller,ou=People,dc=treedap,dc=com))');
     }
@@ -477,6 +512,9 @@ export const LEVELS: Level[] = [
       "To check whether an attribute exists regardless of its value, use the presence filter: <code>(mobile=*)</code>. This matches any entry where mobile has any value at all.",
       "Try: <code>(&(objectClass=inetOrgPerson)(mobile=*))</code>. Every result is a real phone number readable by any unauthenticated client on the network."
     ],
+    flavor: "both" as const,
+    solution: "(&(objectClass=inetOrgPerson)(mobile=*))",
+    insight: "The <code>*</code> wildcard on a bare attribute is a presence check - 'has any value'. It's the cleanest way to audit 'who has populated this field' without caring about specific values.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(mobile=*))');
     }
@@ -509,6 +547,9 @@ export const LEVELS: Level[] = [
       "In this directory, service accounts have <code>objectClass=account</code> - the OpenLDAP class for non-person accounts. The Services OU is their container.",
       "Try: <code>(objectClass=account)</code>. Each result in the report represents a set of credentials that a network observer can read from a packet capture without any special tooling."
     ],
+    flavor: "openldap" as const,
+    solution: "(objectClass=account)",
+    insight: "The <code>account</code> objectClass (paired with <code>simpleSecurityObject</code>) is a legacy OpenLDAP pattern for service accounts with a plain <code>userPassword</code>. AD has no equivalent - service identities live under <code>user</code> with stricter auditing. These entries are audit magnets.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(objectClass=account)');
     }
@@ -546,6 +587,9 @@ export const LEVELS: Level[] = [
       "The attribute is <code>primaryGroupID</code>. Employees carry <code>513</code> (Domain Users), contractors carry <code>514</code> (Domain Guests). Combine this with <code>objectClass=inetOrgPerson</code> using AND.",
       "Try: <code>(&(objectClass=inetOrgPerson)(primaryGroupID=513))</code>. The fix on the portal side: when the target group is the primary group of a user, it is never listed in <code>member</code>. The access check must query <code>primaryGroupID</code> separately, or resolve Domain Users specially."
     ],
+    flavor: "ad" as const,
+    solution: "(&(objectClass=inetOrgPerson)(primaryGroupID=513))",
+    insight: "<code>primaryGroupID</code> is AD-specific. 513 = Domain Users (default for every account), 514 = Domain Guests. It doesn't appear in the <code>memberOf</code> chain, so membership audits that only check <code>memberOf</code> silently miss the primary group assignment.",
     validate(result: LdapEntry[]): ValidationResult {
       return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(primaryGroupID=513))');
     }
@@ -575,6 +619,8 @@ export const LEVELS: Level[] = [
       "Mentally compare the count you get with what you would get from <code>ou=People,dc=treedap,dc=com</code> - roughly 13 entries (the OU itself, the Contractors sub-OU, and 11 person accounts). Everything else - workstations, servers, printers, switches, groups, projects, service accounts - is wasted work the server repeats on every login request.",
       "The optimization is a single config value: baseDN from <code>dc=treedap,dc=com</code> to <code>ou=People,dc=treedap,dc=com</code>. No code changes, no schema changes - just pointing the search at the right subtree."
     ],
+    flavor: "both" as const,
+    insight: "baseDN is the cheapest performance lever you have. A narrow baseDN means less to scan, fewer ACL evaluations, and smaller result sets - regardless of schema or indexing. When latency climbs, check the baseDN before tuning the filter.",
     validateAnswer(answer: string): ValidationResult {
       const n = parseInt(answer.trim(), 10);
       if (n === 85) return { correct: true, feedback: "Correct. 85 entries total in the directory, but the app only needs the 13 entries under ou=People - around 15%. The rest is pure overhead the server walks on every single login. Changing the baseDN reduces the scan by 85%. On a real directory with tens of thousands of entries the gain is proportionally larger - and on an unindexed attribute the difference between a targeted subtree search and a full tree scan can be the difference between milliseconds and seconds. You have finished every scenario - congratulations." };

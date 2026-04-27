@@ -88,6 +88,8 @@ export const LEVEL_THEORY: Record<number, Theory> = {
   -SearchScope Subtree</div>
 
       <p>Notice the AD example uses <code>(objectClass=user)</code>, not <code>inetOrgPerson</code>. AD has its own schema - the filter syntax is identical but the class names differ. This is one of the most common sources of confusion when moving between OpenLDAP and AD environments.</p>
+
+      <p class="concept-callout">💡 <strong>In TreeDap:</strong> every scenario has a <code>📋 Copy as ldapsearch</code> button next to the filter box. Click it to preview the full command built from your filter, baseDN, and scope - then copy it and paste straight into a terminal against a real server.</p>
     `
   },
 

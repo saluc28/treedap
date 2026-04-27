@@ -1,16 +1,37 @@
-import type { ContextMeta, EmailContextMeta, JiraContextMeta, TeamsContextMeta } from '../../engine/types';
+import type { ContextMeta, EmailContextMeta, JiraContextMeta, LdapFlavor, TeamsContextMeta } from '../../engine/types';
 
 interface ObjectiveBarProps {
   context: string;
   task: string;
   contextType?: 'plain' | 'teams' | 'jira' | 'email';
   contextMeta?: ContextMeta;
+  flavor?: LdapFlavor;
 }
 
-export function ObjectiveBar({ context, task, contextType = 'plain', contextMeta }: ObjectiveBarProps) {
+function FlavorBadge({ flavor }: { flavor: LdapFlavor }) {
+  const label = flavor === 'ad' ? 'AD-style' : flavor === 'openldap' ? 'OpenLDAP-style' : 'AD + OpenLDAP';
+  const title =
+    flavor === 'ad'
+      ? 'This scenario uses attributes or conventions specific to Active Directory (e.g. sAMAccountName, primaryGroupID).'
+      : flavor === 'openldap'
+        ? 'This scenario uses attributes or conventions specific to OpenLDAP (e.g. uid, pwdAccountLockedTime, account objectClass).'
+        : 'This scenario uses attributes and filters common to both Active Directory and OpenLDAP deployments.';
+  return (
+    <span className={`flavor-badge flavor-${flavor}`} title={title}>
+      {label}
+    </span>
+  );
+}
+
+export function ObjectiveBar({ context, task, contextType = 'plain', contextMeta, flavor }: ObjectiveBarProps) {
   return (
     <div className="objective-bar">
       <div className="objective-inner">
+        {flavor && (
+          <div className="objective-flavor-row">
+            <FlavorBadge flavor={flavor} />
+          </div>
+        )}
         {contextType === 'teams' && contextMeta?.type === 'teams' && (
           <TeamsMessage context={context} meta={contextMeta} />
         )}
