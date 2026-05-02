@@ -1,7 +1,7 @@
 # TreeDap
 
 An LDAP troubleshooting trainer that runs in your browser.
-17 scenarios based on bugs I (and probably you) have hit in production: wrong baseDN, scope set to `one` when it should be `sub`, apps searching for `uid` in an AD-synced tree, bind DNs that no longer exist because someone moved the service account into a new OU, and so on.
+18 scenarios based on bugs I (and probably you) have hit in production: wrong baseDN, scope set to `one` when it should be `sub`, apps searching for `uid` in an AD-synced tree, bind DNs that no longer exist because someone moved the service account into a new OU, and so on.
 
 Live at [treedap.com](https://treedap.com). No signup, no backend, everything runs client-side.
 
@@ -17,7 +17,7 @@ This project is the step by step guide I wished for. Each use case is a message,
 
 **Three intro levels** covering the minimum vocabulary: entries, DNs, `objectClass`, baseDN + scope.
 
-**Fourteen troubleshooting scenarios** across:
+**Fifteen troubleshooting scenarios** across:
 
 - filter-writing mistakes (wrong attribute, missing NOT, nested groups)
 - scope and baseDN misconfigurations (the classic "worked on dev, empty on prod")
@@ -72,7 +72,7 @@ Context copy lives in the same object. Keep it grounded in a ticket or a message
 
 PRs welcome, useful areas:
 
-- more scenarios, especially around ACL / ACIs, replication lag, referrals
+- more scenarios, especially around ACL / ACIs, referrals
 - better AD coverage (`tokenGroups`, `userAccountControl` bit checks, though the engine would need extending)
 - better mobile story (right now mobile just shows a "come back on a laptop" wall)
 - accessibility (keyboard nav on the directory tree is rudimentary)

@@ -40,7 +40,7 @@ export function Landing({ onStart, onFreeMode }: LandingProps) {
             </h1>
 
             <p className="landing-description">
-              17 hands-on incidents - wrong baseDN, locked accounts, nested groups, AD vs OpenLDAP schema traps - with a live directory and a real RFC 4515 engine.
+              18 hands-on incidents - wrong baseDN, locked accounts, nested groups, AD vs OpenLDAP schema traps - with a live directory and a real RFC 4515 engine.
             </p>
 
             <div className="landing-cta-row">
@@ -53,7 +53,7 @@ export function Landing({ onStart, onFreeMode }: LandingProps) {
             </div>
 
             <div className="landing-meta">
-              <span>17 scenarios</span>
+              <span>18 scenarios</span>
               <span className="landing-meta-dot">·</span>
               <span>no signup</span>
               <span className="landing-meta-dot">·</span>
