@@ -2,6 +2,12 @@ import type { LdapEntry, ValidationResult } from '../engine/types';
 
 export type Screen = 'landing' | 'dashboard' | 'level' | 'free-mode';
 
+export interface QueryHistoryEntry {
+  filter: string;
+  resultCount: number | null;
+  parseError: boolean;
+}
+
 export interface AppState {
   screen: Screen;
   currentLevelId: number | null;
@@ -21,6 +27,7 @@ export interface AppState {
   celebrationStars: number;
   answerInput: string;
   answerResult: ValidationResult | null;
+  queryHistory: QueryHistoryEntry[];
 }
 
 export type Action =
@@ -44,4 +51,5 @@ export type Action =
   | { type: 'CLOSE_CELEBRATION' }
   | { type: 'RESET_LEVEL' }
   | { type: 'SET_ANSWER_INPUT'; payload: string }
-  | { type: 'SET_ANSWER_RESULT'; payload: ValidationResult };
+  | { type: 'SET_ANSWER_RESULT'; payload: ValidationResult }
+  | { type: 'ADD_TO_HISTORY'; payload: QueryHistoryEntry };

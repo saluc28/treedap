@@ -170,6 +170,7 @@ export const DIRECTORY: LdapEntry[] = [
       cn: 'Lisa Parker', givenName: 'Lisa', sn: 'Parker', uid: 'lisa.parker',
       mail: 'lisa.parker@treedap.com',
       department: 'Engineering', title: 'Software Engineer', active: 'FALSE',
+      lastLogon: '20230815000000Z', lastLogonTimestamp: '20230815000000Z',
       sAMAccountName: 'lisa.parker', primaryGroupID: '513'
     }
   },
@@ -191,6 +192,7 @@ export const DIRECTORY: LdapEntry[] = [
       cn: 'Bob Johnson', givenName: 'Bob', sn: 'Johnson', uid: 'bob.johnson',
       mail: 'bob@treedap.com', mobile: '+1-555-0102',
       department: 'HR', title: 'HR Manager', active: 'TRUE',
+      lastLogon: '20251215000000Z', lastLogonTimestamp: '20251215000000Z',
       sAMAccountName: 'bob.johnson', primaryGroupID: '513'
     }
   },
@@ -202,6 +204,7 @@ export const DIRECTORY: LdapEntry[] = [
       mail: 'carol@treedap.com', mobile: '+1-555-0103',
       department: 'Engineering', title: 'DevOps Engineer', active: 'TRUE',
       manager: 'uid=eve.davis,ou=People,dc=treedap,dc=com',
+      lastLogon: '20240220000000Z', lastLogonTimestamp: '20260310000000Z',
       sAMAccountName: 'carol.white', primaryGroupID: '513'
     }
   },
@@ -222,6 +225,7 @@ export const DIRECTORY: LdapEntry[] = [
       cn: 'Eve Davis', givenName: 'Eve', sn: 'Davis', uid: 'eve.davis',
       mail: 'eve@treedap.com', mobile: '+1-555-0105',
       department: 'Engineering', title: 'CTO', active: 'TRUE',
+      lastLogon: '20260417000000Z', lastLogonTimestamp: '20260301000000Z',
       sAMAccountName: 'eve.davis', primaryGroupID: '513'
     }
   },
@@ -255,6 +259,7 @@ export const DIRECTORY: LdapEntry[] = [
       mail: 'henry@treedap.com', mobile: '+1-555-0108',
       department: 'IT', title: 'Sysadmin', active: 'TRUE',
       manager: 'uid=alice.smith,ou=People,dc=treedap,dc=com',
+      pwdReset: 'TRUE',
       sAMAccountName: 'henry.scott', primaryGroupID: '513'
     }
   },

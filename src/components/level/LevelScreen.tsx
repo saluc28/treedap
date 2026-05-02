@@ -11,6 +11,7 @@ import { DirectoryTree } from './DirectoryTree';
 import { InlineConcept } from './InlineConcept';
 import { ResultEntry } from './ResultEntry';
 import { CopyLdapsearchButton } from './CopyLdapsearchButton';
+import { QueryHistory } from './QueryHistory';
 import { MobileWall } from '../MobileWall';
 
 interface UseProgressReturn {
@@ -60,8 +61,8 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
     setDiagnostic(null);
   }, [level.id]);
 
-  const runQuery = useCallback(() => {
-    const filter = state.queryInput.trim();
+  const runQuery = useCallback((override?: string) => {
+    const filter = (override ?? state.queryInput).trim();
     if (!filter) return;
 
     try {
@@ -69,9 +70,11 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
       const allResults = executeFilter(DIRECTORY, filter, 'dc=treedap,dc=com', 'sub');
       // Always just store results - verdict comes only on explicit submit
       dispatch({ type: 'SET_QUERY_RESULTS', payload: { results, allResults } });
+      dispatch({ type: 'ADD_TO_HISTORY', payload: { filter, resultCount: results.length, parseError: false } });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       dispatch({ type: 'SET_PARSE_ERROR', payload: msg });
+      dispatch({ type: 'ADD_TO_HISTORY', payload: { filter, resultCount: null, parseError: true } });
     }
   }, [state.queryInput, level, dispatch]);
 
@@ -80,7 +83,7 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
 
     dispatch({ type: 'INCREMENT_ATTEMPTS' });
     const filterLevel = level as FilterLevel;
-    const validation = filterLevel.validate(state.queryResults);
+    const validation = filterLevel.validate(state.queryResults, state.queryInput);
     dispatch({ type: 'SET_VALIDATION', payload: validation });
 
     if (validation.correct) {
@@ -236,11 +239,12 @@ export function LevelScreen({ levelId, progress, onBack }: LevelScreenProps) {
                     >
                       💡 Hint
                     </button>
-                    <button className="btn btn-primary btn-sm" onClick={runQuery}>
+                    <button className="btn btn-primary btn-sm" onClick={() => runQuery()}>
                       ▶ Run Query
                     </button>
                   </div>
                 </div>
+                <QueryHistory onRerun={(f) => runQuery(f)} />
               </div>
             </div>
 

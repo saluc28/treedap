@@ -19,7 +19,10 @@ export const initialState: AppState = {
   celebrationStars: 0,
   answerInput: '',
   answerResult: null,
+  queryHistory: [],
 };
+
+const HISTORY_LIMIT = 10;
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -45,6 +48,7 @@ export function reducer(state: AppState, action: Action): AppState {
         conceptModalOpen: true,
         answerInput: '',
         answerResult: null,
+        queryHistory: [],
       };
 
     case 'SET_QUERY':
@@ -140,7 +144,19 @@ export function reducer(state: AppState, action: Action): AppState {
         expandedNodes: new Set<string>(),
         answerInput: '',
         answerResult: null,
+        queryHistory: [],
       };
+
+    case 'ADD_TO_HISTORY': {
+      const entry = action.payload;
+      const last = state.queryHistory[state.queryHistory.length - 1];
+      if (last && last.filter === entry.filter) {
+        return state;
+      }
+      const next = [...state.queryHistory, entry];
+      if (next.length > HISTORY_LIMIT) next.shift();
+      return { ...state, queryHistory: next };
+    }
 
     case 'SET_VALIDATION':
       return { ...state, validationResult: action.payload };

@@ -125,7 +125,7 @@ export const LEVELS: Level[] = [
       issueType: 'Task' as const,
       priority: 'Medium' as const,
       ticketTitle: 'Quarterly inventory - list every employee workstation',
-      reporter: 'Sofia Russo (IT Asset Management)',
+      reporter: 'Megan Carter (IT Asset Management)',
     },
     context: "IT Asset Management needs a list of every employee workstation for the quarterly audit. The directory stores all hardware under <code>ou=Computers</code>: workstations, servers, printers, and network gear (routers, switches, firewalls, access points). By convention, workstation entries are named with a <code>ws-</code> prefix (e.g. <code>cn=ws-alice</code>), servers use <code>srv-</code>, printers <code>prn-</code>, network devices <code>rtr-/sw-/fw-/ap-</code>. They are all stored as <code>objectClass=device</code> - so filtering on objectClass alone would give you every piece of hardware in the company. You need to combine two conditions: the objectClass and a pattern match on the cn. LDAP supports wildcards in equality filters: <code>(cn=ws-*)</code> matches any entry whose cn starts with <code>ws-</code>.",
     task: "Find every employee workstation in the directory (cn starts with ws-, objectClass is device)",
@@ -198,7 +198,7 @@ export const LEVELS: Level[] = [
       issueType: 'Incident' as const,
       priority: 'High' as const,
       ticketTitle: 'Authentication broken for contractor accounts',
-      reporter: 'Fabio Marini (IT Helpdesk)',
+      reporter: 'Daniel Wright (IT Helpdesk)',
     },
     context: "Two contractors - Tom Harris and Sara Klein - cannot log in since this morning. The app uses baseDN <code>ou=People,dc=treedap,dc=com</code> with scope <code>one</code> and filter <code>(objectClass=inetOrgPerson)</code>. Both accounts are active and the passwords are correct. When you search the directory yourself you can see them in the tree. The app insists they don't exist. The scope is the culprit: scope <code>one</code> only searches direct children of the baseDN - it never descends into sub-OUs like <code>ou=Contractors</code>. To confirm the root cause, isolate exactly the accounts the app is failing to reach.",
     task: "Find only the contractor accounts that the app cannot see",
@@ -228,7 +228,7 @@ export const LEVELS: Level[] = [
     contextType: "email" as const,
     contextMeta: {
       type: 'email' as const,
-      from: 'Luca Ferretti',
+      from: 'Brian Stevens',
       fromRole: 'Backend Developer',
       subject: 'LDAP bind failing after infrastructure review',
       date: 'Mon, 13 Apr 2026, 17:40',
@@ -259,7 +259,7 @@ export const LEVELS: Level[] = [
     contextType: "teams" as const,
     contextMeta: {
       type: 'teams' as const,
-      sender: 'Valentina Greco',
+      sender: 'Rachel Hayes',
       senderRole: 'Backend Developer',
       avatarColor: '#498205',
       timestamp: 'Today 10:15',
@@ -289,25 +289,33 @@ export const LEVELS: Level[] = [
     contextType: "teams" as const,
     contextMeta: {
       type: 'teams' as const,
-      sender: 'Marco Bianchi',
+      sender: 'Jason Cooper',
       senderRole: 'Backend Developer',
       avatarColor: '#0078d4',
       timestamp: 'Today 15:33',
     },
-    context: "We just migrated to an AD-synced LDAP directory. My app uses <code>(uid=alice.smith)</code> as the login filter - worked perfectly on the old pure OpenLDAP setup. Now zero results for every user. I checked, the accounts are all there in the tree. Nothing in the filter itself looks wrong to me. In Active Directory and AD-synced directories, the canonical login attribute is <code>sAMAccountName</code>, not <code>uid</code>. Pure OpenLDAP environments use <code>uid</code>. Both attributes exist in this directory after the sync - but <code>sAMAccountName</code> is the one AD-aware systems rely on.",
-    task: "Find Alice Smith's account using the AD login attribute",
+    context: "We just migrated to an AD-synced LDAP directory. My app's login filter is still <code>(uid=%s)</code> - written years ago against pure OpenLDAP. After the cutover the filter technically still works: <code>uid</code> happens to be populated by the sync, so users keep logging in. But security audit flagged it. In Active Directory the canonical login attribute is <code>sAMAccountName</code>, not <code>uid</code>; the synced <code>uid</code> is a compatibility convenience that disappears the day the sync template changes or a new account is provisioned with the AD-only profile. We need to migrate the filter now, before the next provisioning round breaks logins silently. Before you change the config, prove to yourself that the legacy filter still works in this dataset, then write the AD-canonical version that does not depend on the sync.",
+    task: "Find Alice Smith using the AD-canonical login attribute - the one that does not depend on the OpenLDAP-side sync",
     baseDN: "ou=People,dc=treedap,dc=com",
     scope: "sub",
     expectedDNs: ["uid=alice.smith,ou=People,dc=treedap,dc=com"],
     hints: [
-      "Click Alice's entry in the tree and look at every attribute. After the AD sync, a new attribute was added alongside <code>uid</code>. It stores the same login name under the attribute name that Active Directory uses.",
-      "In AD environments, <code>sAMAccountName</code> is the login attribute - the equivalent of <code>uid</code> in OpenLDAP. When an app migrates from pure OpenLDAP to AD-synced LDAP, changing the filter attribute from <code>uid</code> to <code>sAMAccountName</code> is almost always required.",
-      "Try: <code>(sAMAccountName=alice.smith)</code>. The app's config needs a single value change: the filter template goes from <code>(uid=%s)</code> to <code>(sAMAccountName=%s)</code>."
+      "Step 1, verify the fragility yourself. Run <code>(uid=alice.smith)</code> against this baseDN. It returns Alice - because the AD sync currently populates <code>uid</code>. But that population is a sync convenience, not a directory truth: the day the sync template changes or a new account skips the OpenLDAP-compat field, the filter silently breaks. Now find the AD-native attribute that records the same login name and does not depend on a sync template.",
+      "Click Alice's entry in the tree. Compare <code>uid</code> with another attribute that holds the same value but uses Microsoft's naming. That other attribute is the canonical AD login - it would still be present in a pure-AD environment with no OpenLDAP heritage.",
+      "Try: <code>(sAMAccountName=alice.smith)</code>. The migration is a one-line config change in the app: filter template goes from <code>(uid=%s)</code> to <code>(sAMAccountName=%s)</code>. Same data today, durable to schema or sync changes tomorrow."
     ],
     flavor: "ad" as const,
     solution: "(sAMAccountName=alice.smith)",
-    insight: "<code>sAMAccountName</code> is the AD-specific login attribute, required for domain logins and capped at 20 characters. Pure OpenLDAP deployments don't populate it - so apps written for AD break when pointed at an LDAP server using <code>uid</code>.",
-    validate(result: LdapEntry[]): ValidationResult {
+    insight: "<code>sAMAccountName</code> is the AD-specific login attribute, required for domain logins and capped at 20 characters. Pure OpenLDAP deployments don't populate it - so apps written for AD break when pointed at an LDAP server using <code>uid</code>. The opposite trap is what this scenario warns against: a filter using <code>uid</code> against an AD-synced directory works today and silently breaks the day the sync stops populating it.",
+    validate(result: LdapEntry[], filterStr?: string): ValidationResult {
+      const usesSAM = (filterStr || '').toLowerCase().includes('samaccountname');
+      if (!usesSAM) {
+        return {
+          correct: false,
+          type: 'warning',
+          feedback: "Your filter returns Alice in this dataset, but it depends on the OpenLDAP-side attribute the audit flagged. The whole point of this scenario is to stop using uid - the day the sync template changes, that filter silently breaks. Use the AD-canonical login attribute instead."
+        };
+      }
       return validateByDNSet(result, this.expectedDNs, '(sAMAccountName=alice.smith)');
     }
   },
@@ -323,7 +331,7 @@ export const LEVELS: Level[] = [
       issueType: 'Task' as const,
       priority: 'Low' as const,
       ticketTitle: 'Org chart widget shows blank manager for most users',
-      reporter: 'Giulia Mancini (Product)',
+      reporter: 'Emily Foster (Product)',
     },
     context: "The new org chart widget reads the <code>manager</code> attribute to build the hierarchy. For most users it shows nothing. The dev team assumed all accounts have a <code>manager</code> attribute - that assumption is wrong. In LDAP, attributes are optional unless the schema enforces them as required. An attribute that is absent returns no value - it does not return null or an empty string. The presence filter <code>(attr=*)</code> is the correct way to check whether an attribute exists. The NOT operator <code>(!())</code> inverts it: you get everything where the attribute is absent.",
     task: "Find all person accounts that are missing the manager attribute - these are the ones the widget cannot display",
@@ -363,7 +371,7 @@ export const LEVELS: Level[] = [
       issueType: 'Task' as const,
       priority: 'High' as const,
       ticketTitle: 'Generate list of accounts currently locked by ppolicy',
-      reporter: 'Sofia Russo (Security Operations)',
+      reporter: 'Hannah Whitfield (Security Operations)',
     },
     context: "Security Operations is investigating a brute-force wave from last night. They need a definitive list of every person account currently locked by the directory's password policy, so helpdesk can reset them in one batch. Application-level flags like <code>active</code> are useless for this - those are set by HR systems, not by the directory. OpenLDAP's ppolicy overlay records a directory-level lockout in the <code>pwdAccountLockedTime</code> attribute. An account has this attribute if and only if ppolicy has locked it. The presence filter <code>(attr=*)</code> matches any entry that has the attribute set, regardless of its value - exactly what you need here.",
     task: "Find every person account currently locked by the directory password policy",
@@ -418,32 +426,34 @@ export const LEVELS: Level[] = [
 
   {
     id: 12,
-    title: "The Expired Service Account",
+    title: "Five Tickets, One Symptom",
     difficulty: "advanced",
-    contextType: "email" as const,
+    contextType: "jira" as const,
     contextMeta: {
-      type: 'email' as const,
-      from: 'Monitoring System',
-      fromRole: 'Automated Alert',
-      subject: '[CRITICAL] LDAP authentication failure - all services down',
-      date: 'Wed, 15 Apr 2026, 00:03',
+      type: 'jira' as const,
+      ticketId: 'TD-415',
+      issueType: 'Incident' as const,
+      priority: 'Critical' as const,
+      ticketTitle: 'Authentication failures across multiple accounts overnight',
+      reporter: 'Help Desk (escalated)',
     },
-    context: "At midnight all services that use LDAP authentication stopped working simultaneously. The LDAP server is up and reachable. Manual queries work fine. The common factor: every affected service authenticates using the <code>ldap-svc</code> service account. Service account passwords can expire just like user passwords - and when they do, the bind fails with 'invalid credentials' even if the password itself has not changed. The <code>shadowExpire</code> attribute stores the account expiry date as a number of days since the Unix epoch (1 Jan 1970).",
-    task: "Check whether the ldap-svc service account has an expiry attribute set",
-    baseDN: "ou=Services,dc=treedap,dc=com",
+    context: "Five accounts opened tickets last night, all with the same complaint: 'invalid credentials'. The directory is up. Manual binds confirmed each one returns LDAP error 49 - but error 49 is a bag of distinct sub-causes, all hidden behind the same generic message at the application layer.<br><br>The five accounts: <code>frank.miller</code>, <code>grace.lee</code>, <code>henry.scott</code>, <code>bob.johnson</code>, and the service account <code>ldap-svc</code>.<br><br>Some are blocked by directory-side state: lockout (<code>pwdAccountLockedTime</code> set), password expiry (<code>pwdChangedTime</code> older than the policy max age of 365 days), account expiry (<code>shadowExpire</code> in the past), or a forced reset (<code>pwdReset=TRUE</code>). For these the user could type the right password and still be rejected - the directory refuses the bind before the password is even compared. The remaining ones have no directory-side issue: the user really did mistype.<br><br>Help desk needs the count: how many of the five require directory-side remediation, and how many are plain wrong-password tickets to hand back to the user?",
+    task: "Investigate the five accounts and count: how many are being rejected by directory-side state (lockout, password expiry, account expiry, or forced reset)?",
+    baseDN: "dc=treedap,dc=com",
     scope: "sub",
-    answerType: "boolean" as const,
-    answerPrompt: "Does the ldap-svc account have a shadowExpire attribute set?",
+    answerType: "number" as const,
+    answerPrompt: "How many of the five accounts are blocked by directory-side state (not just a wrong password)?",
     hints: [
-      "Search for the ldap-svc entry and read its attributes. Use <code>(cn=ldap-svc)</code> and inspect the result in the results panel.",
-      "The <code>shadowExpire</code> attribute stores an expiry date as days since the Unix epoch. Its presence alone indicates that an expiry policy is in effect on this account.",
-      "Try: <code>(&(cn=ldap-svc)(shadowExpire=*))</code>. If this returns the entry, the expiry attribute is set."
+      "Run <code>(uid=frank.miller)</code>, <code>(uid=grace.lee)</code>, <code>(uid=henry.scott)</code>, <code>(uid=bob.johnson)</code>, and <code>(cn=ldap-svc)</code> one at a time. For each, read every attribute and check for any of: <code>pwdAccountLockedTime</code> (any value), <code>pwdChangedTime</code> older than 365 days, <code>shadowExpire</code> set to a past value, or <code>pwdReset=TRUE</code>.",
+      "Frank has <code>pwdAccountLockedTime</code> set (locked by ppolicy after too many bad attempts). Grace has <code>pwdChangedTime</code> from January 2023 - past the 365-day max age (expired). The service account <code>ldap-svc</code> has <code>shadowExpire=19754</code> (early 2024 - already past). Henry has <code>pwdReset=TRUE</code> (admin forced him to change at next login). Bob has none of these.",
+      "Four of the five (Frank, Grace, ldap-svc, Henry) are directory-side blocks - each one needs a different remediation (unlock, force change, extend expiry, clear pwdReset). One (Bob) is genuinely a wrong-password ticket - hand it back."
     ],
     flavor: "openldap" as const,
-    insight: "Service accounts fail silently: no user is watching them and expiry attributes like <code>shadowExpire</code> get copied over from user templates without anyone noticing. Always strip expiry policies from service accounts or monitor them explicitly.",
+    insight: "Error 49 is the generic 'invalid credentials' but the sub-codes tell you the real cause: 773 (must change), 775 (locked), and policy-driven cases that surface as plain 49 with the diagnostic in the server log. Apps that collapse all of these into one user-facing message create an unsolvable troubleshooting loop where the user keeps trying the password they think is right while the directory rejects them for entirely different reasons. The fix is on the app side: read the sub-code and route the user to the right remediation - or at minimum log it so help desk can.",
     validateAnswer(answer: string): ValidationResult {
-      if (answer === 'Yes') return { correct: true, feedback: "Correct. ldap-svc has shadowExpire set to 19754 (days since epoch), which corresponds to early 2024 - the account has been expired for months. Every bind attempt fails at the server level before any application logic runs. The fix: reset the service account credentials and either remove shadowExpire or set it to a future date. Best practice: give service accounts non-expiring passwords and monitor them via a secrets manager rather than relying on LDAP shadow attributes." };
-      return { correct: false, feedback: "Look again. Run (cn=ldap-svc) and read every attribute in the result. There is one that indicates an expiry policy is set on this account." };
+      const n = parseInt(answer.trim(), 10);
+      if (n === 4) return { correct: true, feedback: "Correct. Four of the five are blocked at the directory before the password is even checked: Frank (locked, pwdAccountLockedTime set), Grace (password expired, pwdChangedTime over 365 days old), ldap-svc (account expired, shadowExpire 19754 = early 2024), Henry (forced reset, pwdReset=TRUE). Each needs a different remediation. Bob has no directory-side block - his complaint is a real wrong-password ticket. The deeper lesson: 'invalid credentials' at the app layer is a single string concealing four to six distinct directory states. Always check the LDAP sub-code (773, 775, 532, 533, etc.) before asking the user to re-type their password." };
+      return { correct: false, feedback: "Investigate each of the five accounts and check for any of: pwdAccountLockedTime (any value), pwdChangedTime more than 365 days ago, shadowExpire set to a past value, pwdReset=TRUE. Each of those is a directory-side block. Then count." };
     }
   },
 
@@ -487,7 +497,7 @@ export const LEVELS: Level[] = [
     contextType: "email" as const,
     contextMeta: {
       type: 'email' as const,
-      from: 'Marco Ferrara',
+      from: 'Mark Donovan',
       fromRole: 'Security Auditor',
       subject: 'Pentest finding: anonymous LDAP bind enabled',
       date: 'Thu, 16 Apr 2026, 11:30',
@@ -527,7 +537,7 @@ export const LEVELS: Level[] = [
     contextType: "email" as const,
     contextMeta: {
       type: 'email' as const,
-      from: 'Riccardo Sartori',
+      from: 'Patrick Connor',
       fromRole: 'Security Auditor',
       subject: 'Pentest finding: LDAP traffic unencrypted on port 389',
       date: 'Fri, 17 Apr 2026, 14:05',
@@ -562,7 +572,7 @@ export const LEVELS: Level[] = [
     contextType: "email" as const,
     contextMeta: {
       type: 'email' as const,
-      from: 'Luca Ferretti',
+      from: 'Brian Stevens',
       fromRole: 'Backend Developer',
       subject: 'Domain Users access broken after AD sync',
       date: 'Sat, 18 Apr 2026, 10:14',
@@ -623,8 +633,41 @@ export const LEVELS: Level[] = [
     insight: "baseDN is the cheapest performance lever you have. A narrow baseDN means less to scan, fewer ACL evaluations, and smaller result sets - regardless of schema or indexing. When latency climbs, check the baseDN before tuning the filter.",
     validateAnswer(answer: string): ValidationResult {
       const n = parseInt(answer.trim(), 10);
-      if (n === 85) return { correct: true, feedback: "Correct. 85 entries total in the directory, but the app only needs the 13 entries under ou=People - around 15%. The rest is pure overhead the server walks on every single login. Changing the baseDN reduces the scan by 85%. On a real directory with tens of thousands of entries the gain is proportionally larger - and on an unindexed attribute the difference between a targeted subtree search and a full tree scan can be the difference between milliseconds and seconds. You have finished every scenario - congratulations." };
+      if (n === 85) return { correct: true, feedback: "Correct. 85 entries total in the directory, but the app only needs the 13 entries under ou=People - around 15%. The rest is pure overhead the server walks on every single login. Changing the baseDN reduces the scan by 85%. On a real directory with tens of thousands of entries the gain is proportionally larger - and on an unindexed attribute the difference between a targeted subtree search and a full tree scan can be the difference between milliseconds and seconds." };
       return { correct: false, feedback: "Run (objectClass=*) with scope sub from dc=treedap,dc=com and count every entry returned - OUs, users, groups, computers, servers, printers, switches, service accounts, everything." };
+    }
+  },
+
+  {
+    id: 18,
+    title: "The Replication Trap",
+    difficulty: "advanced",
+    contextType: "jira" as const,
+    contextMeta: {
+      type: 'jira' as const,
+      ticketId: 'TD-428',
+      issueType: 'Task' as const,
+      priority: 'Medium' as const,
+      ticketTitle: 'Quarterly cleanup: disable accounts with no recent logins',
+      reporter: 'Compliance (audit)',
+    },
+    context: "Compliance wants the quarterly cleanup of stale accounts: disable every user that has not logged in for 6 months or more. Today is <strong>2026-04-18</strong>; the threshold is therefore <strong>2025-10-18</strong> (in GeneralizedTime: <code>20251018000000Z</code>).<br><br>A junior engineer drafted the script using <code>lastLogon</code>. A senior pulled them aside before it ran: in Active Directory, <code>lastLogon</code> is per-DC and never replicates - the value you query depends on which DC you happened to hit. A user who logs in only against DC-east will appear stale on DC-west, even though they are perfectly active. The script would have disabled active users.<br><br>The replicated alternative is <code>lastLogonTimestamp</code>: granularity ~14 days (good enough for a 6-month threshold), but consistent across every DC. It is the attribute Microsoft built specifically for stale-account detection.<br><br>For the audit, identify exactly the accounts that have genuinely not logged in across the directory for 6+ months. Avoid the trap: a filter on <code>lastLogon</code> on this DC would return more accounts than it should.",
+    task: "Find every person account whose most recent replicated logon is on or before 2025-10-18",
+    baseDN: "ou=People,dc=treedap,dc=com",
+    scope: "sub",
+    expectedDNs: [
+      "uid=lisa.parker,ou=People,dc=treedap,dc=com"
+    ],
+    hints: [
+      "You need an AND of two conditions: the entry is a person account, AND the replicated last-logon attribute is on or before 2025-10-18 (in GeneralizedTime: <code>20251018000000Z</code>). The non-replicated <code>lastLogon</code> would let through users who are active on other DCs - do not use it.",
+      "The replicated attribute is <code>lastLogonTimestamp</code>. Use the <code>&lt;=</code> operator: <code>(lastLogonTimestamp&lt;=20251018000000Z)</code>. Combine with <code>(objectClass=inetOrgPerson)</code> with an AND.",
+      "Try: <code>(&(objectClass=inetOrgPerson)(lastLogonTimestamp&lt;=20251018000000Z))</code>. As an experiment, run the same filter with <code>lastLogon</code> instead of <code>lastLogonTimestamp</code>. That one returns Carol too - but Carol's <code>lastLogonTimestamp</code> is from March 2026, meaning she logged in to another DC two weeks ago. Disabling her would have caused an outage. Congratulations - you have finished every scenario."
+    ],
+    flavor: "ad" as const,
+    solution: "(&(objectClass=inetOrgPerson)(lastLogonTimestamp<=20251018000000Z))",
+    insight: "<code>lastLogon</code> is updated on every successful bind on each individual DC and never replicates - by design, to spare replication traffic. <code>lastLogonTimestamp</code> is replicated but only refreshed when the gap between the new value and the stored one exceeds the policy (<code>ms-DS-LogonTimeSyncInterval</code>, default 14 days). For real-time activity checks you must query every DC; for stale-account detection use <code>lastLogonTimestamp</code> and accept the 14-day fuzziness. Cleanup scripts written against <code>lastLogon</code> have repeatedly disabled active users in production - the failure mode is silent until SSO outages arrive in the morning.",
+    validate(result: LdapEntry[]): ValidationResult {
+      return validateByDNSet(result, this.expectedDNs, '(&(objectClass=inetOrgPerson)(lastLogonTimestamp<=20251018000000Z))');
     }
   },
 

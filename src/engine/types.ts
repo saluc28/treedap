@@ -65,7 +65,7 @@ export interface FilterLevel extends BaseLevelFields {
   answerType?: never;
   expectedDNs: string[];
   solution?: string;
-  validate: (result: LdapEntry[]) => ValidationResult;
+  validate: (result: LdapEntry[], filterStr?: string) => ValidationResult;
 }
 
 export interface InvestigativeLevel extends BaseLevelFields {
