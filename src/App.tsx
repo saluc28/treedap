@@ -14,7 +14,7 @@ const ConceptModal    = lazy(() => import('./components/modals/ConceptModal').th
 const CelebrationOverlay = lazy(() => import('./components/modals/CelebrationOverlay').then(m => ({ default: m.CelebrationOverlay })));
 
 // Tiny constant - avoids pulling levels.ts into the initial bundle
-const LEVEL_COUNT = 17;
+const LEVEL_COUNT = 18;
 
 // ── Preloader ────────────────────────────────────────────────────────────────
 // While the user reads the landing page we silently fetch the next chunks so

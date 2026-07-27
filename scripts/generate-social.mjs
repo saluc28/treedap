@@ -63,13 +63,8 @@ const ogSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" wi
     <rect x="44" y="72" width="12" height="22" rx="3" fill="url(#trunk)"/>
   </g>
 
-  <!-- Text block (right side) -->
-  <g font-family="Inter, Arial, sans-serif">
-    <!-- Badge -->
-    <rect x="500" y="140" width="380" height="34" rx="4" fill="#1a3050" stroke="#3fb052" stroke-width="1"/>
-    <circle cx="520" cy="157" r="5" fill="#3fb052"/>
-    <text x="536" y="163" font-size="15" font-weight="700" fill="#a2c9ff" letter-spacing="1.5">16 REAL-WORLD SCENARIOS</text>
-
+  <!-- Text block (right side) - shifted up to stay optically centred without the badge -->
+  <g font-family="Inter, Arial, sans-serif" transform="translate(0, -50)">
     <!-- Brand -->
     <text x="500" y="240" font-size="64" font-weight="800" fill="#ffffff" letter-spacing="-1">TreeDap</text>
 

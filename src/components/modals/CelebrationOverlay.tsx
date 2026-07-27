@@ -48,7 +48,7 @@ export function CelebrationOverlay({ stars, levelId, isLastLevel, totalStars, ma
     launchConfetti();
   }, []);
 
-  const shareText = `I just completed TreeDap - 17 real-world LDAP troubleshooting scenarios. ${totalStars}/${maxStars} stars ⭐`;
+  const shareText = `I just completed TreeDap - 18 real-world LDAP troubleshooting scenarios. ${totalStars}/${maxStars} stars ⭐`;
   const shareUrl = 'https://treedap.com';
   const twitterHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
   const linkedinHref = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;

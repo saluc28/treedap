@@ -1,6 +1,6 @@
 import type { Screen } from './types';
 
-const LEVEL_COUNT = 17;
+const LEVEL_COUNT = 18;
 
 export interface Route {
   screen: Screen;

@@ -46,7 +46,7 @@ export function MobileWall() {
       </div>
 
       <ul className="mobile-wall-list">
-        <li><span className="mobile-wall-check">✓</span> 17 real incident scenarios</li>
+        <li><span className="mobile-wall-check">✓</span> 18 real incident scenarios</li>
         <li><span className="mobile-wall-check">✓</span> Live directory tree + RFC 4515 engine</li>
         <li><span className="mobile-wall-check">✓</span> Hints, stars and progress tracking</li>
       </ul>
