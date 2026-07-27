@@ -82,8 +82,8 @@ const ogSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" wi
 </svg>`;
 
 const ogPng = new Resvg(ogSvg, { font: { loadSystemFonts: true } }).render().asPng();
-writeFileSync(resolve(publicDir, 'og-image.png'), ogPng);
+writeFileSync(resolve(publicDir, 'og-image-v2.png'), ogPng);
 
 console.log('Generated:');
 console.log('  - public/logo-512.png (512x512)');
-console.log('  - public/og-image.png (1200x630)');
+console.log('  - public/og-image-v2.png (1200x630)');
